@@ -16,7 +16,6 @@
 #include <string.h>
 #include <stddef.h>
 #include <stdbool.h>
-
 #define FLOG
 
 

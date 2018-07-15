@@ -1,3 +1,4 @@
+; Start program "1.gcode.ngx".
 G0 Z15.000 
 (T1 M6)
 (S6000)
@@ -46,3 +47,4 @@ G1 Z3.000
 G0 Z15.000 
 M5
 G0 X0.000 Y0.000
+;End program

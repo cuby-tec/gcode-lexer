@@ -1,5 +1,3 @@
-
-#line 1 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 /*
  * A mini G_Code language scanner.
  */
@@ -131,15 +129,6 @@ gfunction prs[] = {&command,&gcomment,&g_command,&x_coordinate
 		b_command(curline,param,len);
 #endif
 }
-
- char gBuffer[100];
- 
- size_t buffer_index = 0;
-
- void append(char ch)
- {
- 	gBuffer[buffer_index++] = ch;
- }
 
 
 
@@ -483,69 +472,246 @@ void gpunct(size_t curline, char * param, size_t len)
 
 // 		punct			Symbols.
 
+%%{
+	machine gparcer;
+	
+	
+	access fsm->;
+	variable p fsm->p;
+	variable pe fsm->pe;
+	variable eof fsm->eof;
+	variable cs fsm->cs;
+	
+	action finish_ok {
+//		if ( fsm->buflen > 0 )
+//			fsm->write( fsm->buf, fsm->buflen );
+//		fwrite("End\n",1,4,stdout);
+		printf("Parcer ended.");
+	}
+	
+	newline = '\n' @{
+		//parser_out = command;
+		(*prs[eCommand])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		fsm->curline += 1;
+		fsm->pe = fsm->te;
+		fsm->done = 1;
+//		fsm->eof = fsm->te;
+		};
+		
+	any_count_line = any | newline;
 
-#line 795 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+	# Consume a C comment.
+#	c_comment := any_count_line* :>> '*/' @{fgoto main;};
+#	g_comment :=  any* :>> '\n' @{ fprintf(flog, "gcomment(%lu): ", fsm->curline );
+#		//fprintf(flog,"te=%5s  te=%5s",te,ts);
+#		//printf("te=%lu ts=%lu ;",te,ts);
+#		//curline ++;
+#		fgoto main;};
+
+	# Alpha numberic characters or underscore.
+	alnum_u = alnum | '_';
+
+	# Alpha charactres or underscore.
+	alpha_u = alpha | '_';
+
+	optional = (('+'|'-')? digit+ ('.' digit+)?){,1};
+	
+	decimal = ('+'|'-')? digit+ ('.' digit+)?;
+		
+	word = alnum*;
+
+	main := |*
+#	gparcer := |*
+
+	# g comment
+#	';' { fgoto g_comment; };
+#	';' any* :>> '\n' { printf("[42]te=%lu ts=%lu ;",fsm->te,fsm->ts); fsm->curline++;};
+	';' (any-'\n')* { 
+		//parser_out = gcomment;
+		(*prs[eComment])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
+	'(' any* :>> ')'  {
+		//parser_out = gcomment;
+		(*prs[eComment])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
+
+	# g command GXX.X
+	'G' digit{1,2} ('.' digit+)? {
+		//parser_out = g_command;
+		(*prs[eGcommand])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
+
+	# g X coordinate
+	'X' optional {
+		//parser_out = x_coordinate;
+		(*prs[eXparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
+
+	# g Y coordinate
+	'Y' optional {
+		//parser_out = y_coordinate;
+		(*prs[eYparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
+
+	# g Z coordiane
+	'Z' optional {
+		//parser_out = z_coordinate;
+		(*prs[eZparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
+
+	# g A    Stepper A position or angle {Annn]
+	'A' decimal {
+		//parser_out = a_parameter;
+		(*prs[eAparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
+	
+	# g B  Stepper B position or angle {Bnnn}
+	'B' decimal {
+		//parser_out = b_parameter;
+		(*prs[eBparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
+
+	# g C  Stepper C position or angle {Cnnn}
+	'C' decimal{
+		//parser_out = c_parameter;
+		(*prs[eCparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
+
+	# g D  Adjust Diagonal Rod {D}
+	'D' {
+		//parser_out = d_parameter;
+		(*prs[eDparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
+
+	# g E coordinate
+	'E' optional {
+		//parser_out = e_parameter;
+		(*prs[eEparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
 
 
+	# g F Feed rate parameter in G-command
+	'F' decimal {
+		//parser_out = f_parameter;
+		(*prs[eFparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
 
-#line 492 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
-static const char _gparcer_actions[] = {
-	0, 1, 1, 2, 1, 2, 2, 1, 
-	3, 3, 1, 2, 0, 3, 1, 3, 
-	0
-};
+	# g I X offset for arcs and G87 canned cycles
+	'I' optional {
+		//parser_out = i_parameter;
+		(*prs[eIparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
 
-static const char _gparcer_key_offsets[] = {
-	0, 0, 2, 3, 4, 6, 7, 8, 
-	9
-};
+	# g J Y offset for arcs and G87 canned cycles
+	'J' decimal {
+		//parser_out = j_parameter;
+		(*prs[eJparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
 
-static const char _gparcer_trans_keys[] = {
-	59, 71, 10, 10, 48, 57, 10, 10, 
-	10, 10, 0
-};
+	# g K Z offset for arcs and G87 canned cycles.
+	'K' decimal {
+		//parser_out = k_parameter;
+		(*prs[eKparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
+	
+	
+	# g L generic parameter word for G10, M66 and others
+	'L' decimal {
+		//parser_out = l_parameter;
+		(*prs[eLparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
+	
+	# g M Code Modal Groups
+	'M'  digit+ {
+		//parser_out = m_parameter;
+		(*prs[eMparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
 
-static const char _gparcer_single_lengths[] = {
-	0, 2, 1, 1, 0, 1, 1, 1, 
-	1
-};
+	# g N Line number 
+	'N'  digit+ {
+		//parser_out = n_parameter;
+		(*prs[eNparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
 
-static const char _gparcer_range_lengths[] = {
-	0, 0, 0, 0, 1, 0, 0, 0, 
-	0
-};
+	# g P  	Command parameter, such as time in milliseconds; proportional (Kp) in PID Tuning 
+	#		Dwell time in canned cycles and with G4. Key used with G10.
+	'P' alnum_u*  {
+		//parser_out = p_parameter;
+		(*prs[ePparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
 
-static const char _gparcer_index_offsets[] = {
-	0, 0, 3, 5, 7, 9, 11, 13, 
-	15
-};
+	# g R Arc radius or canned cycle plane
+	#	R Relative move flag 
+	'R' optional {
+		//parser_out = r_parameter;
+		(*prs[eRparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
 
-static const char _gparcer_indicies[] = {
-	0, 2, 1, 3, 0, 4, 0, 5, 
-	1, 6, 5, 7, 5, 4, 0, 7, 
-	5, 0
-};
+	# g S Spindle speed; Command parameter, such as time in seconds; temperatures; voltage to send to a motor 
+	'S'  optional   {
+		//parser_out = s_parameter;
+		(*prs[eSparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
+		
+	# g T Tool selection
+	'T'  digit? {
+		//parser_out = t_parameter;
+		(*prs[eTpaam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
 
-static const char _gparcer_trans_targs[] = {
-	2, 0, 4, 3, 7, 5, 6, 8
-};
+	# g U  	U axis of machine;
+	#		Un <bool> with a non-zero value will apply the result to current zprobe_zoffset 
+	'U' optional {
+		//parser_out = u_parameter;
+		(*prs[eUparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
+		
+	# g V  	V axis of machine;
+	'V' optional {
+		//parser_out = v_parameter;
+		(*prs[eVparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
+		
+	# g W  	W axis of machine;
+	'W' optional {
+		//parser_out = w_parameter;
+		(*prs[eWparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
 
-static const char _gparcer_trans_actions[] = {
-	1, 0, 1, 3, 9, 1, 6, 13
-};
+	# g * Checksum 
+	'*' digit{2} {
+		//parser_out = star_parameter;
+		(*prs[eStarparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+		};
 
-static const int gparcer_start = 1;
-static const int gparcer_first_final = 7;
-static const int gparcer_error = 0;
+	# Whitespace is standard ws, newlines and control codes.
+	any_count_line - 0x21..0x7e;
 
-static const int gparcer_en_main = 1;
+	# Symbols. Upon entering clear the buffer. On all transitions
+	# buffer a character. Upon leaving dump the symbol.
+	( punct - [_'"()] ) {
+		//fprintf(flog, "symbol(%i): %c\n", fsm->curline, fsm->ts[0] );
+		(*prs[ePunct])(fsm->curline,fsm->ts,1);
+	};
 
 
-#line 798 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+	# Describe both c style comments and c++ style comments. The
+	# priority bump on tne terminator of the comments brings us
+	# out of the extend* which matches everything.
+	# eof string
+	'\n'* newline;
+#	'\n'* newline $!finish_ok;
+
+
+	*|;
+	
+#	main :=  ( )* @/ fcall gparcer ;
+}%%
+
+%% write data nofinal;
 
 
 struct format fsm;
-
 
 
 
@@ -560,20 +726,13 @@ int format_finish( struct format *fsmp )
 
 void format_init( struct format *fsm )
 {
-	buffer_index = 0;
 	fsm->buflen = 0;
 	fsm->done = 0;
 	//int cs, act, have = 0, curline = 1;
 	fsm->have = 0;
 	fsm->curline = 1;
 	fsm->state = 0;
-	
-#line 572 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
-	{
-	( fsm->cs) = gparcer_start;
-	}
-
-#line 824 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+	%% write init;
 }
 
 void format_execute( struct format *fsm, char *data, int len, int isEof )
@@ -587,127 +746,10 @@ void format_execute( struct format *fsm, char *data, int len, int isEof )
 	printf("format_execute[747]: len:%d  done:%d line:%d \n",len,fsm->done,fsm->curline);
 	if(len == 0)
 		return;
-	
-#line 592 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
-	{
-	int _klen;
-	unsigned int _trans;
-	const char *_acts;
-	unsigned int _nacts;
-	const char *_keys;
-
-	if ( ( fsm->p) == ( fsm->pe) )
-		goto _test_eof;
-	if ( ( fsm->cs) == 0 )
-		goto _out;
-_resume:
-	_keys = _gparcer_trans_keys + _gparcer_key_offsets[( fsm->cs)];
-	_trans = _gparcer_index_offsets[( fsm->cs)];
-
-	_klen = _gparcer_single_lengths[( fsm->cs)];
-	if ( _klen > 0 ) {
-		const char *_lower = _keys;
-		const char *_mid;
-		const char *_upper = _keys + _klen - 1;
-		while (1) {
-			if ( _upper < _lower )
-				break;
-
-			_mid = _lower + ((_upper-_lower) >> 1);
-			if ( (*( fsm->p)) < *_mid )
-				_upper = _mid - 1;
-			else if ( (*( fsm->p)) > *_mid )
-				_lower = _mid + 1;
-			else {
-				_trans += (unsigned int)(_mid - _keys);
-				goto _match;
-			}
-		}
-		_keys += _klen;
-		_trans += _klen;
-	}
-
-	_klen = _gparcer_range_lengths[( fsm->cs)];
-	if ( _klen > 0 ) {
-		const char *_lower = _keys;
-		const char *_mid;
-		const char *_upper = _keys + (_klen<<1) - 2;
-		while (1) {
-			if ( _upper < _lower )
-				break;
-
-			_mid = _lower + (((_upper-_lower) >> 1) & ~1);
-			if ( (*( fsm->p)) < _mid[0] )
-				_upper = _mid - 2;
-			else if ( (*( fsm->p)) > _mid[1] )
-				_lower = _mid + 2;
-			else {
-				_trans += (unsigned int)((_mid - _keys)>>1);
-				goto _match;
-			}
-		}
-		_trans += _klen;
-	}
-
-_match:
-	_trans = _gparcer_indicies[_trans];
-	( fsm->cs) = _gparcer_trans_targs[_trans];
-
-	if ( _gparcer_trans_actions[_trans] == 0 )
-		goto _again;
-
-	_acts = _gparcer_actions + _gparcer_trans_actions[_trans];
-	_nacts = (unsigned int) *_acts++;
-	while ( _nacts-- > 0 )
-	{
-		switch ( *_acts++ )
-		{
-	case 0:
-#line 740 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
-	{
-//		if ( fsm->buflen > 0 )
-//			fsm->write( fsm->buf, fsm->buflen );
-//		fwrite("End\n",1,4,stdout);
-		printf("\n action finish_ok.\n");
-	}
-	break;
-	case 1:
-#line 755 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
-	{
-		append((*( fsm->p)));
-	}
-	break;
-	case 2:
-#line 762 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
-	{
-		(*prs[eComment])(fsm->curline ,gBuffer,buffer_index);
-//		printf("onBuffer: %s", gBuffer);
-
-	}
-	break;
-	case 3:
-#line 776 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
-	{
-		(*prs[eGcommand])(fsm->curline ,gBuffer,buffer_index);
-	}
-	break;
-#line 695 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
-		}
-	}
-
-_again:
-	if ( ( fsm->cs) == 0 )
-		goto _out;
-	if ( ++( fsm->p) != ( fsm->pe) )
-		goto _resume;
-	_test_eof: {}
-	_out: {}
-	}
-
-#line 838 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+	%% write exec;
 	
 		if ( format_finish( fsm ) <= 0 )
-		printf("[602] FAIL :finish code:%d  %-10s \n", format_finish( fsm ) ,data);
+		printf("[602] FAIL fsm:%d  %-10s \n", format_finish( fsm ) ,data);
 
 	
 }

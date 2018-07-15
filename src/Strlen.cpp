@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
 
 		//			   buffer[len-2] = 0;
 
-		printf("buffer:%s : %li \n",buffer, strlen(buffer));
+//		printf("buffer:%s : %li \n",buffer, strlen(buffer));
 	}
 
 

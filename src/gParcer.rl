@@ -130,6 +130,15 @@ gfunction prs[] = {&command,&gcomment,&g_command,&x_coordinate
 #endif
 }
 
+ char gBuffer[100];
+ 
+ size_t buffer_index = 0;
+
+ void append(char ch)
+ {
+ 	gBuffer[buffer_index++] = ch;
+ }
+
 
 
 
@@ -482,13 +491,6 @@ void gpunct(size_t curline, char * param, size_t len)
 	variable eof fsm->eof;
 	variable cs fsm->cs;
 	
-	action finish_ok {
-//		if ( fsm->buflen > 0 )
-//			fsm->write( fsm->buf, fsm->buflen );
-//		fwrite("End\n",1,4,stdout);
-		printf("Parcer ended.");
-	}
-	
 	newline = '\n' @{
 		//parser_out = command;
 		(*prs[eCommand])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
@@ -520,198 +522,283 @@ void gpunct(size_t curline, char * param, size_t len)
 		
 	word = alnum*;
 
-	main := |*
+#1	main := |*
 #	gparcer := |*
 
 	# g comment
 #	';' { fgoto g_comment; };
 #	';' any* :>> '\n' { printf("[42]te=%lu ts=%lu ;",fsm->te,fsm->ts); fsm->curline++;};
-	';' (any-'\n')* { 
-		//parser_out = gcomment;
-		(*prs[eComment])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
-	'(' any* :>> ')'  {
-		//parser_out = gcomment;
-		(*prs[eComment])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a1 = ';' (any-'\n')* ;
+#1	{ 
+#1		//parser_out = gcomment;
+#1		(*prs[eComment])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
+	a2 = '(' any* :>> ')' ; 
+#1	{
+#1		//parser_out = gcomment;
+#1		(*prs[eComment])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g command GXX.X
-	'G' digit{1,2} ('.' digit+)? {
-		//parser_out = g_command;
-		(*prs[eGcommand])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a3 = 'G' digit{1,2} ('.' digit+)? ;
+#1	{
+#1		//parser_out = g_command;
+#1		(*prs[eGcommand])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g X coordinate
-	'X' optional {
-		//parser_out = x_coordinate;
-		(*prs[eXparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a4 = 'X' optional ;
+#1	{
+#1		//parser_out = x_coordinate;
+#1		(*prs[eXparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g Y coordinate
-	'Y' optional {
-		//parser_out = y_coordinate;
-		(*prs[eYparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a5 = 'Y' optional ;
+#1	{
+#1		//parser_out = y_coordinate;
+#1		(*prs[eYparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g Z coordiane
-	'Z' optional {
-		//parser_out = z_coordinate;
-		(*prs[eZparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a6 = 'Z' optional ;
+#1	{
+#1		//parser_out = z_coordinate;
+#1		(*prs[eZparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g A    Stepper A position or angle {Annn]
-	'A' decimal {
-		//parser_out = a_parameter;
-		(*prs[eAparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a7 = 'A' decimal ;
+#1	{
+#1		//parser_out = a_parameter;
+#1		(*prs[eAparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 	
 	# g B  Stepper B position or angle {Bnnn}
-	'B' decimal {
-		//parser_out = b_parameter;
-		(*prs[eBparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a8 = 'B' decimal ;
+#1	{
+#1		//parser_out = b_parameter;
+#1		(*prs[eBparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g C  Stepper C position or angle {Cnnn}
-	'C' decimal{
-		//parser_out = c_parameter;
-		(*prs[eCparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a9 = 'C' decimal ;
+#1	{
+#1		//parser_out = c_parameter;
+#1		(*prs[eCparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g D  Adjust Diagonal Rod {D}
-	'D' {
-		//parser_out = d_parameter;
-		(*prs[eDparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a10 = 'D' ;
+#1	{
+#1		//parser_out = d_parameter;
+#1		(*prs[eDparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g E coordinate
-	'E' optional {
-		//parser_out = e_parameter;
-		(*prs[eEparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a11 = 'E' optional ;
+#1	{
+#1		//parser_out = e_parameter;
+#1		(*prs[eEparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 
 	# g F Feed rate parameter in G-command
-	'F' decimal {
-		//parser_out = f_parameter;
-		(*prs[eFparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a12 = 'F' decimal ;
+#1	{
+#1		//parser_out = f_parameter;
+#1		(*prs[eFparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g I X offset for arcs and G87 canned cycles
-	'I' optional {
-		//parser_out = i_parameter;
-		(*prs[eIparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a13 = 'I' optional ;
+#1	{
+#1		//parser_out = i_parameter;
+#1		(*prs[eIparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g J Y offset for arcs and G87 canned cycles
-	'J' decimal {
-		//parser_out = j_parameter;
-		(*prs[eJparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a14 = 'J' decimal ;
+#1	{
+#1		//parser_out = j_parameter;
+#1		(*prs[eJparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g K Z offset for arcs and G87 canned cycles.
-	'K' decimal {
-		//parser_out = k_parameter;
-		(*prs[eKparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a15 = 'K' decimal ;
+#1	{
+#1		//parser_out = k_parameter;
+#1		(*prs[eKparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 	
 	
 	# g L generic parameter word for G10, M66 and others
-	'L' decimal {
-		//parser_out = l_parameter;
-		(*prs[eLparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a16 = 'L' decimal ;
+#1	{
+#1		//parser_out = l_parameter;
+#1		(*prs[eLparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 	
 	# g M Code Modal Groups
-	'M'  digit+ {
-		//parser_out = m_parameter;
-		(*prs[eMparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a17 = 'M'  digit+ ;
+#1	{
+#1		//parser_out = m_parameter;
+#1		(*prs[eMparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g N Line number 
-	'N'  digit+ {
-		//parser_out = n_parameter;
-		(*prs[eNparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a18 = 'N'  digit+ ;
+#1	{
+#1		//parser_out = n_parameter;
+#1		(*prs[eNparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g P  	Command parameter, such as time in milliseconds; proportional (Kp) in PID Tuning 
 	#		Dwell time in canned cycles and with G4. Key used with G10.
-	'P' alnum_u*  {
-		//parser_out = p_parameter;
-		(*prs[ePparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a19 = 'P' alnum_u*  ;
+#1	{
+#1		//parser_out = p_parameter;
+#1		(*prs[ePparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g R Arc radius or canned cycle plane
 	#	R Relative move flag 
-	'R' optional {
-		//parser_out = r_parameter;
-		(*prs[eRparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a20 = 'R' optional ;
+#1	{
+#1		//parser_out = r_parameter;
+#1		(*prs[eRparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g S Spindle speed; Command parameter, such as time in seconds; temperatures; voltage to send to a motor 
-	'S'  optional   {
-		//parser_out = s_parameter;
-		(*prs[eSparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a21 = 'S'  optional   ;
+#1	{
+#1		//parser_out = s_parameter;
+#1		(*prs[eSparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 		
 	# g T Tool selection
-	'T'  digit? {
-		//parser_out = t_parameter;
-		(*prs[eTpaam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a22 = 'T'  digit? ;
+#1	{
+#1		//parser_out = t_parameter;
+#1		(*prs[eTpaam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g U  	U axis of machine;
 	#		Un <bool> with a non-zero value will apply the result to current zprobe_zoffset 
-	'U' optional {
-		//parser_out = u_parameter;
-		(*prs[eUparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a23 = 'U' optional ;
+#1	{
+#1		//parser_out = u_parameter;
+#1		(*prs[eUparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 		
 	# g V  	V axis of machine;
-	'V' optional {
-		//parser_out = v_parameter;
-		(*prs[eVparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a24 = 'V' optional ;
+#1	{
+#1		//parser_out = v_parameter;
+#1		(*prs[eVparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 		
 	# g W  	W axis of machine;
-	'W' optional {
-		//parser_out = w_parameter;
-		(*prs[eWparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a25 = 'W' optional ;
+#1	{
+#1		//parser_out = w_parameter;
+#1		(*prs[eWparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# g * Checksum 
-	'*' digit{2} {
-		//parser_out = star_parameter;
-		(*prs[eStarparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-		};
+	a26 = '*' digit{2} ;
+#1	{
+#1		//parser_out = star_parameter;
+#1		(*prs[eStarparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
+#1		};
 
 	# Whitespace is standard ws, newlines and control codes.
-	any_count_line - 0x21..0x7e;
+	a29 = any_count_line - 0x21..0x7e;
 
 	# Symbols. Upon entering clear the buffer. On all transitions
 	# buffer a character. Upon leaving dump the symbol.
-	( punct - [_'"()] ) {
-		//fprintf(flog, "symbol(%i): %c\n", fsm->curline, fsm->ts[0] );
-		(*prs[ePunct])(fsm->curline,fsm->ts,1);
-	};
+	a27 = ( punct - [_'"()] ) ;
+#1	{
+#1		//fprintf(flog, "symbol(%i): %c\n", fsm->curline, fsm->ts[0] );
+#1		(*prs[ePunct])(fsm->curline,fsm->ts,1);
+#1	};
 
 
 	# Describe both c style comments and c++ style comments. The
 	# priority bump on tne terminator of the comments brings us
 	# out of the extend* which matches everything.
 	# eof string
-	'\n'* newline;
+	a28 = '\n'* newline;
 #	'\n'* newline $!finish_ok;
 
 
-	*|;
+#1	*|;
 	
 #	main :=  ( )* @/ fcall gparcer ;
+	
+	
+	action finish_ok {
+//		if ( fsm->buflen > 0 )
+//			fsm->write( fsm->buf, fsm->buflen );
+//		fwrite("End\n",1,4,stdout);
+		printf("\n action finish_ok.\n");
+	}
+	
+
+	
+	action onHeader 
+	{
+		printf("action onHeader\n");
+	}
+	
+	action onBuffer
+	{
+		append(fc);
+	}
+	
+	# Comment =================
+	
+	action onComment
+	{
+		(*prs[eComment])(fsm->curline ,gBuffer,buffer_index);
+//		printf("onBuffer: %s", gBuffer);
+
+	}
+	
+	a31 = ';'@onBuffer (any)* @onBuffer;
+	
+	gRemark = a31 '\n'@onComment;
+	
+	
+	# G command ============
+	
+	action onGcommand
+	{
+		(*prs[eGcommand])(fsm->curline ,gBuffer,buffer_index);
+	}
+	
+	a32a = (any)*;
+	
+	a32b = ('G' digit{1,2} ('.' digit+)?); 
+	
+	a32 = (a32b a32a )$onBuffer;
+	
+	gCommand = a32 '\n'@onGcommand;
+	
+	#G command <<<<<<<<<<<<<<<<<<<
+	
+	appropriate = ( (gRemark | gCommand) . '\n' @finish_ok );  
+	
+	#Command construction. 
+	main := appropriate;
+	
 }%%
 
-%% write data nofinal;
+%% write data ;
 
 
 struct format fsm;
+
 
 
 
@@ -726,6 +813,7 @@ int format_finish( struct format *fsmp )
 
 void format_init( struct format *fsm )
 {
+	buffer_index = 0;
 	fsm->buflen = 0;
 	fsm->done = 0;
 	//int cs, act, have = 0, curline = 1;
@@ -749,7 +837,7 @@ void format_execute( struct format *fsm, char *data, int len, int isEof )
 	%% write exec;
 	
 		if ( format_finish( fsm ) <= 0 )
-		printf("[602] FAIL fsm:%d  %-10s \n", format_finish( fsm ) ,data);
+		printf("[602] FAIL :finish code:%d  %-10s \n", format_finish( fsm ) ,data);
 
 	
 }
