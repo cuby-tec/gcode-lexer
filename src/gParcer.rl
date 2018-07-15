@@ -56,6 +56,8 @@ struct format
 	int eofile;
 	int lenfile;
 	uint state;
+	int top;
+	int stack[100];
 };
 
 //#define curline	fsm->curline
@@ -130,16 +132,24 @@ gfunction prs[] = {&command,&gcomment,&g_command,&x_coordinate
 #endif
 }
 
- char gBuffer[100];
+#define gBUFFER_SIZE	100 
+ 
+ char gBuffer[gBUFFER_SIZE];
  
  size_t buffer_index = 0;
+ size_t param_index;
 
- void append(char ch)
- {
- 	gBuffer[buffer_index++] = ch;
- }
+void append(char ch)
+{
+	gBuffer[buffer_index++] = ch;
+}
 
-
+void resetBuffer()
+{
+	buffer_index = 0;
+	param_index = 0;
+	memset(gBuffer,0,gBUFFER_SIZE);
+}
 
 
 // g comment
@@ -490,6 +500,8 @@ void gpunct(size_t curline, char * param, size_t len)
 	variable pe fsm->pe;
 	variable eof fsm->eof;
 	variable cs fsm->cs;
+	variable stack fsm->stack;
+	variable top fsm->top;
 	
 	newline = '\n' @{
 		//parser_out = command;
@@ -756,6 +768,13 @@ void gpunct(size_t curline, char * param, size_t len)
 		append(fc);
 	}
 	
+	#Command ===========
+	
+	action onCommand
+	{
+		(*prs[eCommand])(fsm->curline ,gBuffer,buffer_index);
+	}
+	
 	# Comment =================
 	
 	action onComment
@@ -775,15 +794,52 @@ void gpunct(size_t curline, char * param, size_t len)
 	action onGcommand
 	{
 		(*prs[eGcommand])(fsm->curline ,gBuffer,buffer_index);
+		param_index = buffer_index;
 	}
+	
+	action onXparam
+	{
+		(*prs[eXparam])(fsm->curline ,&gBuffer[param_index],buffer_index-param_index);
+		param_index = buffer_index;
+		printf("onXparam:%i : %c\n",param_index, gBuffer[buffer_index-1] );
+	}
+	
+	action onYparam
+	{
+		(*prs[eYparam])(fsm->curline ,&gBuffer[param_index],buffer_index-param_index);
+		param_index = buffer_index;
+		printf("onYparam:%i : %c\n",(int)param_index, gBuffer[buffer_index-1] );
+	}
+	
+	action return { fret; }
+	
+	# a4 = 'X' optional ;
+	# optional = (('+'|'-')? digit+ ('.' digit+)?){,1};
+	
+	a32e = (('Y' optional )$onBuffer )@onYparam;
+	
+	#a32d = (('X' optional )$onBuffer )@onXparam;
+	a32d = ((any* space)$onBuffer )@onXparam;
+	
+	mYparam := (a32e) @return;
+	
+	mXparam := (a32d) @return;
+	
+	action call_mYparam { fcall mYparam; }
+	
+	action call_mXpara { fcall mXparam; }
+	
+#	a32c = space+ @call_mXpara space+ @call_mYparam ((any)*)$onBuffer;
+	a32c = space+ a32d space+ a32e ((any)*)$onBuffer;
 	
 	a32a = (any)*;
 	
-	a32b = ('G' digit{1,2} ('.' digit+)?); 
+	a32b = (('G' digit{1,2} ('.' digit+)?)$onBuffer)@onGcommand; 
 	
-	a32 = (a32b a32a )$onBuffer;
+	#a32 = a32b (a32a )$onBuffer;
+	a32 = a32b a32c;
 	
-	gCommand = a32 '\n'@onGcommand;
+	gCommand = a32 '\n'@onCommand;
 	
 	#G command <<<<<<<<<<<<<<<<<<<
 	
