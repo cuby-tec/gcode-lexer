@@ -821,7 +821,7 @@ void gpunct(size_t curline, char * param, size_t len)
 	# a4 = 'X' optional ;
 	# optional = (('+'|'-')? digit+ ('.' digit+)?){,1};
 	
-	a32e = (('Y' optional ) );
+	a32e = 'Y' optional ;
 	
 	#a32d = (('X' optional ) )@onXparam;
 	a32d = (('X' optional ) );
@@ -867,20 +867,43 @@ void gpunct(size_t curline, char * param, size_t len)
 		printf("\t\tfinish_str\n");
 	}
 	
-#1	gCommand = (alnum+ >start_str $on_char  %finish_str | ' ')* ;
+	gCommand = (lower+ >start_str $on_char  %finish_str | ' ')* ;
 #2	gCommand = (('G' optional) >start_str $on_char %finish_str |' ' )+;
+#	gCommand = (('G' optional) >start_str $on_char %finish_str |' ');
+	
 #2	gCommand = (('G' optional)|('M' optional) >start_str $on_char %finish_str |' ' )+;
-	gCommand = ((('G' optional)|('M' optional)) >start_str $on_char %finish_str |' ' )+;
+#3	gCommand = ((('G' optional)|('M' optional)) >start_str $on_char %finish_str |' ' )+;
+#4	gCommand = ((('G' optional)|('M' optional)|(a32e)) >start_str $on_char %finish_str |' ' )+;
 #3	gCommand = (('G' (any - ' ' )*)|('M' optional) >start_str $on_char %finish_str |' ' )+;
 	
 	
 	#G command <<<<<<<<<<<<<<<<<<<
 	
 #1	appropriate = ( a32a '\n') @finish_ok ;  
-	appropriate = (gCommand a32a '\n' @finish_ok) ;
+	appropriate = (gCommand  '\n' @finish_ok) ;
 	
 	#Command construction. 
-	main := appropriate;
+#	main := appropriate;
+#	main := (lower+ >start_str $on_char  %finish_str | ' ')* '\n' %finish_ok;
+	
+	
+	action dgt      { printf("DGT: %c\n", fc); }
+	action dec      { printf("DEC: .\n"); }
+	action exp      { printf("EXP: %c\n", fc); }
+	action exp_sign { printf("SGN: %c\n", fc); }
+	action number   { printf("NUMBER\n");  /*NUMBER*/ }
+
+	number = (
+	    [0-9]+ $dgt ( '.' @dec [0-9]+ $dgt )?
+	    ( [eE] ( [+\-] $exp_sign )? [0-9]+ $exp )?
+	) %number;
+
+#	main :=  (number '\n')* ;
+#	main :=  ((number)|(word [' ''.'';''"']?)*) '\n' %finish_ok;
+#	main :=  (alnum* [' ''.'';''"''-''']?)* '\n' %finish_ok;
+#1	main :=  (alnum+ [ -~])* '\n' %finish_ok;
+	main :=  (digit+ ('.'digit+)? ( [ ]?[eE] [+\-] digit )? )* '\n' %finish_ok;
+	
 	
 }%%
 
@@ -912,12 +935,13 @@ void format_init( struct format *fsm )
 	fsm->state = 0;
 	%% write init;
 }
-
+static int strnum = 0;
 void format_execute( struct format *fsm, char *data, int len, int isEof )
 {
 //	const char *p = data;
 //	const char *pe = data + len;
 //	const char *eof = isEof ? pe : 0;
+	fsm->curline = ++strnum;
 	fsm->buf = data;
 	fsm->p = data;
 	fsm->pe = data+len;
@@ -939,7 +963,7 @@ void init(){
 
 void execute(char *data, int len){
 	fsm.done = 0;
-	format_execute(&fsm, data, len, false);
+	format_execute(&fsm, data, len, true);
 }
 
 int finish(){
