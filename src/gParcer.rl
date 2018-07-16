@@ -886,7 +886,6 @@ void gpunct(size_t curline, char * param, size_t len)
 #	main := appropriate;
 #	main := (lower+ >start_str $on_char  %finish_str | ' ')* '\n' %finish_ok;
 	
-	
 	action dgt      { printf("DGT: %c\n", fc); }
 	action dec      { printf("DEC: .\n"); }
 	action exp      { printf("EXP: %c\n", fc); }
@@ -906,24 +905,37 @@ void gpunct(size_t curline, char * param, size_t len)
 
 #	main := ()* '\n' %finish_ok
 	
+
+	
 	action return { printf("RETURN\n"); fret; }
 	
-	action call_mdate {printf("DATE: %c\n",fc); fcall date; }
+	action call_mblock {printf("DATE: %c\n",fc); fcall date; }
 	
-	action call_gname { printf("NAME: %c\n",fc);fcall gname; }
+	action call_gblock { printf("NAME: %c\n",fc);fcall gname; }
 	
+	action start_param { printf("PARAMS: %c\n",fc); }
 	
+	action char_param { printf("\tchar_param: %c\n",fc); }
+	
+	action end_param { printf("\tend_param: %c\n",fc); }
 	
 	# A parser for date strings.
-	date := digit+  '\n' @return;
+	date := decimal  '\n' @return;
 
+	
 	# A parser for name strings.
-	gname := ( print+ | ' ' )** '\n' @return;
+#	gname := ( print+ | ' ' )** '\n' @return;
+	
+	gindex = digit+ $dgt ( '.' @dec [0-9]+ $dgt )? ;
+	
+	param = (alpha digit+ ('.' digit+)  )>start_param $char_param ;
+	
+	gname := (( gindex) ' ' ( (param)%end_param |' ')*  '\n') @return;
 
 	# The main parser.
 	block =
-	( 'G' )  @call_gname |
-	( 'M' )  @call_mdate;
+	( 'G' )  @call_gblock | ('F' gindex ) |
+	( 'M' )  @call_mblock;
 	
 	main := block  %finish_ok;	
 	
