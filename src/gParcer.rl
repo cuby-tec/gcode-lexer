@@ -801,14 +801,16 @@ void gpunct(size_t curline, char * param, size_t len)
 	{
 		(*prs[eXparam])(fsm->curline ,&gBuffer[param_index],buffer_index-param_index);
 		param_index = buffer_index;
-		printf("onXparam:%i : %c\n",param_index, gBuffer[buffer_index-1] );
+//		printf("onXparam:%i : %c\n",param_index, gBuffer[buffer_index-1] );
+		printf("onXparam1: %s : %i \n",fsm->p,fsm->pe-fsm->p);
 	}
 	
 	action onYparam
 	{
 		(*prs[eYparam])(fsm->curline ,&gBuffer[param_index],buffer_index-param_index);
 		param_index = buffer_index;
-		printf("onYparam:%i : %c\n",(int)param_index, gBuffer[buffer_index-1] );
+//		printf("onYparam:%i : %c\n",(int)param_index, gBuffer[buffer_index-1] );
+		printf("onYparam1: %s \n",fsm->p);
 	}
 	
 	action return { fret; }
@@ -816,10 +818,10 @@ void gpunct(size_t curline, char * param, size_t len)
 	# a4 = 'X' optional ;
 	# optional = (('+'|'-')? digit+ ('.' digit+)?){,1};
 	
-	a32e = (('Y' optional )$onBuffer )@onYparam;
+	a32e = (('Y' optional )$onBuffer );
 	
 	#a32d = (('X' optional )$onBuffer )@onXparam;
-	a32d = ((any* space)$onBuffer )@onXparam;
+	a32d = (('X' optional )$onBuffer );
 	
 	mYparam := (a32e) @return;
 	
@@ -830,7 +832,7 @@ void gpunct(size_t curline, char * param, size_t len)
 	action call_mXpara { fcall mXparam; }
 	
 #	a32c = space+ @call_mXpara space+ @call_mYparam ((any)*)$onBuffer;
-	a32c = space+ a32d space+ a32e ((any)*)$onBuffer;
+	a32c = (space+ a32d@onXparam)? . (space+ a32e@onYparam)? ((any)*)$onBuffer;
 	
 	a32a = (any)*;
 	
