@@ -919,6 +919,8 @@ void gpunct(size_t curline, char * param, size_t len)
 	
 	action end_param { printf("\tend_param: %c\n",fc); }
 	
+	action start_tag { printf("start_tag: %c\n",fc); }
+	
 	# A parser for date strings.
 	date := decimal  '\n' @return;
 
@@ -928,16 +930,20 @@ void gpunct(size_t curline, char * param, size_t len)
 	
 	gindex = digit+ $dgt ( '.' @dec [0-9]+ $dgt )? ;
 	
-	param = (alpha digit+ ('.' digit+)  )>start_param $char_param ;
+	#Local commentary
+	l_com = '('(any)* :>> ')' ;
 	
-	gname := (( gindex) ' ' ( (param)%end_param |' ')*  '\n') @return;
+	param = (alpha [+\-]? digit+ ('.' digit+)  )>start_param $char_param ;
+	
+	gname := (( gindex) ' ' ( (param)%end_param |' ')* (l_com)? '\n') @return;
 
 	# The main parser.
-	block =
-	( 'G' )  @call_gblock | ('F' gindex ) |
-	( 'M' )  @call_mblock;
+	block =(
+	( 'G' )  @call_gblock | ( 'M' )  gindex  
+	| ('F' gindex ) | ('T' gindex) | 'S' gindex 
+	| (';' (any)* :>> '\n')|'(' (any)* :>> ')' )>start_tag;
 	
-	main := block  %finish_ok;	
+	main := (block (l_com)? '\n'? | ('' '\n')? ) %finish_ok;	
 	
 	
 	
