@@ -816,7 +816,7 @@ void gpunct(size_t curline, char * param, size_t len)
 		printf("onYparam1: %s \n",fsm->p);
 	}
 	
-	action return { fret; }
+#	action return { fret; }
 	
 	# a4 = 'X' optional ;
 	# optional = (('+'|'-')? digit+ ('.' digit+)?){,1};
@@ -826,13 +826,13 @@ void gpunct(size_t curline, char * param, size_t len)
 	#a32d = (('X' optional ) )@onXparam;
 	a32d = (('X' optional ) );
 	
-	mYparam := (a32e) @return;
+#	mYparam := (a32e) @return;
 	
-	mXparam := (a32d) @return;
+#	mXparam := (a32d) @return;
 	
-	action call_mYparam { fcall mYparam; }
+#	action call_mYparam { fcall mYparam; }
 	
-	action call_mXpara { fcall mXparam; }
+#	action call_mXpara { fcall mXparam; }
 	
 #	a32c = space+ @call_mXpara space+ @call_mYparam ((any)*);
 	a32c = (space+ a32d@onXparam)? . (space+ a32e@onYparam)? ((any)*);
@@ -902,7 +902,32 @@ void gpunct(size_t curline, char * param, size_t len)
 #	main :=  ((number)|(word [' ''.'';''"']?)*) '\n' %finish_ok;
 #	main :=  (alnum* [' ''.'';''"''-''']?)* '\n' %finish_ok;
 #1	main :=  (alnum+ [ -~])* '\n' %finish_ok;
-	main :=  (digit+ ('.'digit+)? ( [ ]?[eE] [+\-] digit )? )* '\n' %finish_ok;
+#	main :=  (digit+ ('.'digit+)? ( [ ]?[eE] [+\-] digit )? )* '\n' %finish_ok;
+
+#	main := ()* '\n' %finish_ok
+	
+	action return { printf("RETURN\n"); fret; }
+	
+	action call_mdate {printf("DATE: %c\n",fc); fcall date; }
+	
+	action call_gname { printf("NAME: %c\n",fc);fcall gname; }
+	
+	
+	
+	# A parser for date strings.
+	date := digit+  '\n' @return;
+
+	# A parser for name strings.
+	gname := ( print+ | ' ' )** '\n' @return;
+
+	# The main parser.
+	block =
+	( 'G' )  @call_gname |
+	( 'M' )  @call_mdate;
+	
+	main := block  %finish_ok;	
+	
+	
 	
 	
 }%%
