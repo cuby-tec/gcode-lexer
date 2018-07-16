@@ -772,19 +772,20 @@ void gpunct(size_t curline, char * param, size_t len)
 	
 	action onCommand
 	{
-		(*prs[eCommand])(fsm->curline ,gBuffer,buffer_index);
+//		(*prs[eCommand])(fsm->curline ,fsm->buf,fsm->p-fsm->buf);
+		printf("onCommand: %s : %d \n", fsm->buf,fsm->p-fsm->buf);
 	}
 	
 	# Comment =================
 	
 	action onComment
 	{
-		(*prs[eComment])(fsm->curline ,gBuffer,buffer_index);
-//		printf("onBuffer: %s", gBuffer);
+		(*prs[eComment])(fsm->curline ,fsm->buf,fsm->p-fsm->buf);
+		printf("onComment: %s", fsm->buf);
 
 	}
 	
-	a31 = ';'@onBuffer (any)* @onBuffer;
+	a31 = ';' (any)* ;
 	
 	gRemark = a31 '\n'@onComment;
 	
@@ -793,13 +794,15 @@ void gpunct(size_t curline, char * param, size_t len)
 	
 	action onGcommand
 	{
-		(*prs[eGcommand])(fsm->curline ,gBuffer,buffer_index);
+		(*prs[eGcommand])(fsm->curline ,fsm->buf,fsm->p-fsm->buf);
 		param_index = buffer_index;
+		printf("onGcommand 799: %s : %i \n",fsm->buf,fsm->p-fsm->buf);
+		printf("onGcommand 800: %s : %i \n",fsm->p,fsm->p-fsm->buf);
 	}
 	
 	action onXparam
 	{
-		(*prs[eXparam])(fsm->curline ,&gBuffer[param_index],buffer_index-param_index);
+		(*prs[eXparam])(fsm->curline ,fsm->buf,fsm->p-fsm->buf);
 		param_index = buffer_index;
 //		printf("onXparam:%i : %c\n",param_index, gBuffer[buffer_index-1] );
 		printf("onXparam1: %s : %i \n",fsm->p,fsm->pe-fsm->p);
@@ -807,7 +810,7 @@ void gpunct(size_t curline, char * param, size_t len)
 	
 	action onYparam
 	{
-		(*prs[eYparam])(fsm->curline ,&gBuffer[param_index],buffer_index-param_index);
+		(*prs[eYparam])(fsm->curline ,fsm->buf,fsm->p-fsm->buf);
 		param_index = buffer_index;
 //		printf("onYparam:%i : %c\n",(int)param_index, gBuffer[buffer_index-1] );
 		printf("onYparam1: %s \n",fsm->p);
@@ -818,10 +821,10 @@ void gpunct(size_t curline, char * param, size_t len)
 	# a4 = 'X' optional ;
 	# optional = (('+'|'-')? digit+ ('.' digit+)?){,1};
 	
-	a32e = (('Y' optional )$onBuffer );
+	a32e = (('Y' optional ) );
 	
-	#a32d = (('X' optional )$onBuffer )@onXparam;
-	a32d = (('X' optional )$onBuffer );
+	#a32d = (('X' optional ) )@onXparam;
+	a32d = (('X' optional ) );
 	
 	mYparam := (a32e) @return;
 	
@@ -831,21 +834,50 @@ void gpunct(size_t curline, char * param, size_t len)
 	
 	action call_mXpara { fcall mXparam; }
 	
-#	a32c = space+ @call_mXpara space+ @call_mYparam ((any)*)$onBuffer;
-	a32c = (space+ a32d@onXparam)? . (space+ a32e@onYparam)? ((any)*)$onBuffer;
+#	a32c = space+ @call_mXpara space+ @call_mYparam ((any)*);
+	a32c = (space+ a32d@onXparam)? . (space+ a32e@onYparam)? ((any)*);
 	
 	a32a = (any)*;
 	
-	a32b = (('G' digit{1,2} ('.' digit+)?)$onBuffer)@onGcommand; 
+#	header_contents = (
+#	lower+ >start_str $on_char %finish_str |
+#	’ ’
+#	)*;
 	
-	#a32 = a32b (a32a )$onBuffer;
+	a32b = ([GM]. optional)>onGcommand; 
+	
+	#a32 = a32b (a32a );
 	a32 = a32b a32c;
 	
-	gCommand = a32 '\n'@onCommand;
+#	gCommand = ( (a32b) a32a '\n') @onCommand;
+	
+	
+	action start_str{
+		resetBuffer();
+		printf("\ttstart_str\n");
+	}
+	
+	action on_char{
+		append(fc);
+		printf("\t\ton_char\n");
+	}
+	
+	action finish_str{
+		fwrite( gBuffer, 1, buffer_index, stdout );
+		printf("\t\tfinish_str\n");
+	}
+	
+#1	gCommand = (alnum+ >start_str $on_char  %finish_str | ' ')* ;
+#2	gCommand = (('G' optional) >start_str $on_char %finish_str |' ' )+;
+#2	gCommand = (('G' optional)|('M' optional) >start_str $on_char %finish_str |' ' )+;
+	gCommand = ((('G' optional)|('M' optional)) >start_str $on_char %finish_str |' ' )+;
+#3	gCommand = (('G' (any - ' ' )*)|('M' optional) >start_str $on_char %finish_str |' ' )+;
+	
 	
 	#G command <<<<<<<<<<<<<<<<<<<
 	
-	appropriate = ( (gRemark | gCommand) . '\n' @finish_ok );  
+#1	appropriate = ( a32a '\n') @finish_ok ;  
+	appropriate = (gCommand a32a '\n' @finish_ok) ;
 	
 	#Command construction. 
 	main := appropriate;
@@ -886,16 +918,17 @@ void format_execute( struct format *fsm, char *data, int len, int isEof )
 //	const char *p = data;
 //	const char *pe = data + len;
 //	const char *eof = isEof ? pe : 0;
+	fsm->buf = data;
 	fsm->p = data;
 	fsm->pe = data+len;
 	fsm->eof = isEof ? fsm->pe : 0;
-	printf("format_execute[747]: len:%d  done:%d line:%d \n",len,fsm->done,fsm->curline);
+	printf("format_execute[892]: len:%d  done:%d line:%d \n",len,fsm->done,fsm->curline);
 	if(len == 0)
 		return;
 	%% write exec;
 	
 		if ( format_finish( fsm ) <= 0 )
-		printf("[602] FAIL :finish code:%d  %-10s \n", format_finish( fsm ) ,data);
+		printf("[898] FAIL :finish code:%d  %-10s \n", format_finish( fsm ) ,data);
 
 	
 }
