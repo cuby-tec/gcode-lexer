@@ -843,7 +843,7 @@ void gpunct(size_t curline, char * param, size_t len)
 	param = ((param_data) | ( l_com  ) )>start_param $dgt ;
 	
 	# A parser for name strings.
-	gname := (( gindex)%command_index ' ' ( (param).space? )*  (l_com)? '\n') @return;
+	gname := (( gindex)%command_index (' ' ( (param).space? )*)?  (l_com)? '\n') @return;
 
 	mindex = digit+ $dgt ( '.' @dec [0-9]+ $dgt )? ;
 	
@@ -851,7 +851,7 @@ void gpunct(size_t curline, char * param, size_t len)
 	
 	# The main parser.
 	block =(
-	( 'G' )  @call_gblock | ( 'M' )  @call_mblock  
+	( 'G'|'M' )  @call_gblock | ( 'D' )  @call_mblock  
 	| ('F' gindex ) | ('T' gindex) | 'S' gindex 
 	| (';' (any)* :>> '\n')| ('(' (any)* :>> ')')$dgt )>start_tag;
 	
