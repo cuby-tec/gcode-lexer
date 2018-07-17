@@ -794,7 +794,15 @@ void gpunct(size_t curline, char * param, size_t len)
 	
 	action call_gblock {
 		append(fc);
-		printf("NAME: %c\n",fc);fcall gname; 
+		printf("NAME: %c\n",fc);
+		fcall gname; 
+	}
+	
+	action call_mblock {
+		append(fc);
+		printf("mblock: %c\n",fc);
+		fcall mblock; 
+		
 	}
 	
 	action start_param {
@@ -827,7 +835,8 @@ void gpunct(size_t curline, char * param, size_t len)
 	gindex = digit+ $dgt ( '.' @dec [0-9]+ $dgt )? ;
 	
 	#Local commentary
-	l_com = ( (';' (any)* :>> cntrl)) @end_param ;
+	#l_com = ( (';' (any)* :>> cntrl)) @end_param ;
+	l_com = (( '('(any)* :>> ')') | (';' (any)* :>> cntrl)) @end_param ;
 	
 	param_data = (alpha [+\-]? digit+ ('.' digit+)? )%end_param ; 
 	
@@ -836,9 +845,13 @@ void gpunct(size_t curline, char * param, size_t len)
 	# A parser for name strings.
 	gname := (( gindex)%command_index ' ' ( (param).space? )*  (l_com)? '\n') @return;
 
+	mindex = digit+ $dgt ( '.' @dec [0-9]+ $dgt )? ;
+	
+	mblock := (( mindex)@command_index  (' ' ( (param).space? )*)?  ) @return;
+	
 	# The main parser.
 	block =(
-	( 'G' )  @call_gblock | ( 'M' )  @call_gblock  
+	( 'G' )  @call_gblock | ( 'M' )  @call_mblock  
 	| ('F' gindex ) | ('T' gindex) | 'S' gindex 
 	| (';' (any)* :>> '\n')| ('(' (any)* :>> ')')$dgt )>start_tag;
 	
