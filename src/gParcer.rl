@@ -169,7 +169,7 @@ void resetBuffer()
 // g GXX.X digit 		=command=	command GXX.X
  void g_command (size_t curline, char * param, size_t len){
 #ifdef FLOG	 
-		fprintf(flog, "G command(%lu): ", curline );
+		fprintf(flog, "command line(%lu): ", curline );
 		fwrite( param, 1, len, flog );
 		fprintf(flog,"\n");
 #endif
@@ -182,7 +182,7 @@ void resetBuffer()
  void x_coordinate(size_t curline, char * param, size_t len)
 {
 #ifdef FLOG
-	 fprintf(flog, "\tX parameter(%lu): ", curline );
+	 fprintf(flog, "\t parameter line(%lu): ", curline );
 		fwrite( param, 1, len, flog );
 		fprintf(flog,"\n");
 #endif
@@ -771,7 +771,7 @@ void gpunct(size_t curline, char * param, size_t len)
 	
 	action dgt      {
 		append(fc);
-		printf("DGT: %c\n", fc); 
+//		printf("DGT: %c\n", fc); 
 	}
 	
 	action dec      {
@@ -792,8 +792,6 @@ void gpunct(size_t curline, char * param, size_t len)
 	
 	action return { printf("RETURN\n"); fret; }
 	
-#	action call_mblock {printf("DATE: %c\n",fc); fcall gname; }
-	
 	action call_gblock {
 		append(fc);
 		printf("NAME: %c\n",fc);fcall gname; 
@@ -804,9 +802,11 @@ void gpunct(size_t curline, char * param, size_t len)
 		printf("start param: %c\n",fc); 
 	}
 	
-	action char_param { printf("\tchar_param: %c\n",fc); }
-	
-	action end_param { printf("\t\tend_param: %c\n",fc); }
+	action end_param {
+		(*prs[eXparam])(fsm->curline ,&gBuffer[gts],buffer_index - gts);
+		fwrite( &gBuffer[gts], 1, buffer_index - gts, stdout );
+		printf("\n\tend_param: %c\n",fc); 
+	}
 	
 	action start_tag {
 		resetBuffer();
@@ -827,11 +827,11 @@ void gpunct(size_t curline, char * param, size_t len)
 	gindex = digit+ $dgt ( '.' @dec [0-9]+ $dgt )? ;
 	
 	#Local commentary
-	l_com = (( '('(any)* :>> ')') | (';' (any)* :>> cntrl)) %end_param ;
+	l_com = ( (';' (any)* :>> cntrl)) @end_param ;
 	
 	param_data = (alpha [+\-]? digit+ ('.' digit+)? )%end_param ; 
 	
-	param = ((param_data) | ( l_com  ) )>start_param $char_param ;
+	param = ((param_data) | ( l_com  ) )>start_param $dgt ;
 	
 	# A parser for name strings.
 	gname := (( gindex)%command_index ' ' ( (param).space? )*  (l_com)? '\n') @return;
@@ -840,7 +840,7 @@ void gpunct(size_t curline, char * param, size_t len)
 	block =(
 	( 'G' )  @call_gblock | ( 'M' )  @call_gblock  
 	| ('F' gindex ) | ('T' gindex) | 'S' gindex 
-	| (';' (any)* :>> '\n')|'(' (any)* :>> ')' )>start_tag;
+	| (';' (any)* :>> '\n')| ('(' (any)* :>> ')')$dgt )>start_tag;
 	
 	main := (block (l_com)? '\n'? | ('' '\n')? ) %finish_ok;	
 	
@@ -893,8 +893,11 @@ void format_execute( struct format *fsm, char *data, int len, int isEof )
 		return;
 	%% write exec;
 	
-		if ( format_finish( fsm ) <= 0 )
-		printf("[898] FAIL :finish code:%d  %-10s \n", format_finish( fsm ) ,data);
+		if ( format_finish( fsm ) <= 0 ){
+			int as = 1;
+			printf("[898] FAIL :finish code:%d  %-10s \n", format_finish( fsm ) ,data);
+			assert(format_finish( fsm ) >= 1) ;
+		}
 
 	
 }
