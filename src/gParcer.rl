@@ -798,13 +798,6 @@ void gpunct(size_t curline, char * param, size_t len)
 		fcall gname; 
 	}
 	
-	action call_mblock {
-		append(fc);
-		printf("mblock: %c\n",fc);
-		fcall mblock; 
-		
-	}
-	
 	action start_param {
 		gts = buffer_index;
 		printf("start param: %c\n",fc); 
@@ -845,13 +838,9 @@ void gpunct(size_t curline, char * param, size_t len)
 	# A parser for name strings.
 	gname := (( gindex)%command_index (' ' ( (param).space? )*)?  (l_com)? '\n') @return;
 
-	mindex = digit+ $dgt ( '.' @dec [0-9]+ $dgt )? ;
-	
-	mblock := (( mindex)@command_index  (' ' ( (param).space? )*)?  ) @return;
-	
 	# The main parser.
 	block =(
-	( 'G'|'M' )  @call_gblock | ( 'D' )  @call_mblock  
+	( 'G'|'M' )  @call_gblock   
 	| ('F' gindex ) | ('T' gindex) | 'S' gindex 
 	| (';' (any)* :>> '\n')| ('(' (any)* :>> ')')$dgt )>start_tag;
 	
