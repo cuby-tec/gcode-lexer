@@ -909,7 +909,7 @@ void gpunct(size_t curline, char * param, size_t len)
 	
 	action return { printf("RETURN\n"); fret; }
 	
-	action call_mblock {printf("DATE: %c\n",fc); fcall date; }
+	action call_mblock {printf("DATE: %c\n",fc); fcall gname; }
 	
 	action call_gblock { printf("NAME: %c\n",fc);fcall gname; }
 	
@@ -931,15 +931,15 @@ void gpunct(size_t curline, char * param, size_t len)
 	gindex = digit+ $dgt ( '.' @dec [0-9]+ $dgt )? ;
 	
 	#Local commentary
-	l_com = '('(any)* :>> ')' ;
+	l_com = ( '('(any)* :>> ')') | (';' (any)* :>> cntrl) ;
 	
-	param = (alpha [+\-]? digit+ ('.' digit+)  )>start_param $char_param ;
+	param = ((alpha [+\-]? digit+ ('.' digit+)? ) | ( l_com  ) )>start_param $char_param ;
 	
-	gname := (( gindex) ' ' ( (param)%end_param |' ')* (l_com)? '\n') @return;
+	gname := (( gindex) ' ' ( (param)%end_param |' '? )* (l_com)? '\n') @return;
 
 	# The main parser.
 	block =(
-	( 'G' )  @call_gblock | ( 'M' )  gindex  
+	( 'G' )  @call_gblock | ( 'M' )  @call_mblock  
 	| ('F' gindex ) | ('T' gindex) | 'S' gindex 
 	| (';' (any)* :>> '\n')|'(' (any)* :>> ')' )>start_tag;
 	
