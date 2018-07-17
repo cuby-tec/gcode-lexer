@@ -138,6 +138,7 @@ gfunction prs[] = {&command,&gcomment,&g_command,&x_coordinate
  
  size_t buffer_index = 0;
  size_t param_index;
+ size_t gts;
 
 void append(char ch)
 {
@@ -146,6 +147,7 @@ void append(char ch)
 
 void resetBuffer()
 {
+	gts = 0;
 	buffer_index = 0;
 	param_index = 0;
 	memset(gBuffer,0,gBUFFER_SIZE);
@@ -756,138 +758,26 @@ void gpunct(size_t curline, char * param, size_t len)
 		printf("\n action finish_ok.\n");
 	}
 	
-
-	
-	action onHeader 
-	{
-		printf("action onHeader\n");
-	}
-	
-	action onBuffer
-	{
-		append(fc);
-	}
 	
 	#Command ===========
 	
-	action onCommand
-	{
-//		(*prs[eCommand])(fsm->curline ,fsm->buf,fsm->p-fsm->buf);
-		printf("onCommand: %s : %d \n", fsm->buf,fsm->p-fsm->buf);
-	}
-	
 	# Comment =================
-	
-	action onComment
-	{
-		(*prs[eComment])(fsm->curline ,fsm->buf,fsm->p-fsm->buf);
-		printf("onComment: %s", fsm->buf);
 
-	}
-	
-	a31 = ';' (any)* ;
-	
-	gRemark = a31 '\n'@onComment;
-	
-	
 	# G command ============
 	
-	action onGcommand
-	{
-		(*prs[eGcommand])(fsm->curline ,fsm->buf,fsm->p-fsm->buf);
-		param_index = buffer_index;
-		printf("onGcommand 799: %s : %i \n",fsm->buf,fsm->p-fsm->buf);
-		printf("onGcommand 800: %s : %i \n",fsm->p,fsm->p-fsm->buf);
-	}
-	
-	action onXparam
-	{
-		(*prs[eXparam])(fsm->curline ,fsm->buf,fsm->p-fsm->buf);
-		param_index = buffer_index;
-//		printf("onXparam:%i : %c\n",param_index, gBuffer[buffer_index-1] );
-		printf("onXparam1: %s : %i \n",fsm->p,fsm->pe-fsm->p);
-	}
-	
-	action onYparam
-	{
-		(*prs[eYparam])(fsm->curline ,fsm->buf,fsm->p-fsm->buf);
-		param_index = buffer_index;
-//		printf("onYparam:%i : %c\n",(int)param_index, gBuffer[buffer_index-1] );
-		printf("onYparam1: %s \n",fsm->p);
-	}
-	
-#	action return { fret; }
-	
-	# a4 = 'X' optional ;
-	# optional = (('+'|'-')? digit+ ('.' digit+)?){,1};
-	
-	a32e = 'Y' optional ;
-	
-	#a32d = (('X' optional ) )@onXparam;
-	a32d = (('X' optional ) );
-	
-#	mYparam := (a32e) @return;
-	
-#	mXparam := (a32d) @return;
-	
-#	action call_mYparam { fcall mYparam; }
-	
-#	action call_mXpara { fcall mXparam; }
-	
-#	a32c = space+ @call_mXpara space+ @call_mYparam ((any)*);
-	a32c = (space+ a32d@onXparam)? . (space+ a32e@onYparam)? ((any)*);
-	
-	a32a = (any)*;
-	
-#	header_contents = (
-#	lower+ >start_str $on_char %finish_str |
-#	’ ’
-#	)*;
-	
-	a32b = ([GM]. optional)>onGcommand; 
-	
-	#a32 = a32b (a32a );
-	a32 = a32b a32c;
-	
-#	gCommand = ( (a32b) a32a '\n') @onCommand;
-	
-	
-	action start_str{
-		resetBuffer();
-		printf("\ttstart_str\n");
-	}
-	
-	action on_char{
-		append(fc);
-		printf("\t\ton_char\n");
-	}
-	
-	action finish_str{
-		fwrite( gBuffer, 1, buffer_index, stdout );
-		printf("\t\tfinish_str\n");
-	}
-	
-	gCommand = (lower+ >start_str $on_char  %finish_str | ' ')* ;
-#2	gCommand = (('G' optional) >start_str $on_char %finish_str |' ' )+;
-#	gCommand = (('G' optional) >start_str $on_char %finish_str |' ');
-	
-#2	gCommand = (('G' optional)|('M' optional) >start_str $on_char %finish_str |' ' )+;
-#3	gCommand = ((('G' optional)|('M' optional)) >start_str $on_char %finish_str |' ' )+;
-#4	gCommand = ((('G' optional)|('M' optional)|(a32e)) >start_str $on_char %finish_str |' ' )+;
-#3	gCommand = (('G' (any - ' ' )*)|('M' optional) >start_str $on_char %finish_str |' ' )+;
-	
-	
 	#G command <<<<<<<<<<<<<<<<<<<
+
 	
-#1	appropriate = ( a32a '\n') @finish_ok ;  
-	appropriate = (gCommand  '\n' @finish_ok) ;
 	
-	#Command construction. 
-#	main := appropriate;
-#	main := (lower+ >start_str $on_char  %finish_str | ' ')* '\n' %finish_ok;
+	action dgt      {
+		append(fc);
+		printf("DGT: %c\n", fc); 
+	}
 	
-	action dgt      { printf("DGT: %c\n", fc); }
-	action dec      { printf("DEC: .\n"); }
+	action dec      {
+		append(fc);
+		printf("DEC: .\n"); 
+	}
 	action exp      { printf("EXP: %c\n", fc); }
 	action exp_sign { printf("SGN: %c\n", fc); }
 	action number   { printf("NUMBER\n");  /*NUMBER*/ }
@@ -902,37 +792,53 @@ void gpunct(size_t curline, char * param, size_t len)
 	
 	action return { printf("RETURN\n"); fret; }
 	
-	action call_mblock {printf("DATE: %c\n",fc); fcall gname; }
+#	action call_mblock {printf("DATE: %c\n",fc); fcall gname; }
 	
-	action call_gblock { printf("NAME: %c\n",fc);fcall gname; }
+	action call_gblock {
+		append(fc);
+		printf("NAME: %c\n",fc);fcall gname; 
+	}
 	
-	action start_param { printf("PARAMS: %c\n",fc); }
+	action start_param {
+		gts = buffer_index;
+		printf("start param: %c\n",fc); 
+	}
 	
 	action char_param { printf("\tchar_param: %c\n",fc); }
 	
-	action end_param { printf("\tend_param: %c\n",fc); }
+	action end_param { printf("\t\tend_param: %c\n",fc); }
 	
-	action start_tag { printf("start_tag: %c\n",fc); }
+	action start_tag {
+		resetBuffer();
+		printf("start_tag: %c\n",fc); 
+	}
+	
+	action command_index{
+		(*prs[eGcommand])(fsm->curline ,gBuffer,buffer_index-gts);
+		fwrite( gBuffer, 1, buffer_index, stdout );
+		printf("\ncommand_index: %c\n",fc);
+	}
 	
 	# A parser for date strings.
 	date := decimal  '\n' @return;
 
 	
-	# A parser for name strings.
-#	gname := ( print+ | ' ' )** '\n' @return;
 	
 	gindex = digit+ $dgt ( '.' @dec [0-9]+ $dgt )? ;
 	
 	#Local commentary
-	l_com = ( '('(any)* :>> ')') | (';' (any)* :>> cntrl) ;
+	l_com = (( '('(any)* :>> ')') | (';' (any)* :>> cntrl)) %end_param ;
 	
-	param = ((alpha [+\-]? digit+ ('.' digit+)? ) | ( l_com  ) )>start_param $char_param ;
+	param_data = (alpha [+\-]? digit+ ('.' digit+)? )%end_param ; 
 	
-	gname := (( gindex) ' ' ( (param)|space+ )*@end_param  (l_com)? '\n') @return;
+	param = ((param_data) | ( l_com  ) )>start_param $char_param ;
+	
+	# A parser for name strings.
+	gname := (( gindex)%command_index ' ' ( (param).space? )*  (l_com)? '\n') @return;
 
 	# The main parser.
 	block =(
-	( 'G' )  @call_gblock | ( 'M' )  @call_mblock  
+	( 'G' )  @call_gblock | ( 'M' )  @call_gblock  
 	| ('F' gindex ) | ('T' gindex) | 'S' gindex 
 	| (';' (any)* :>> '\n')|'(' (any)* :>> ')' )>start_tag;
 	
