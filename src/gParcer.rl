@@ -897,14 +897,7 @@ void gpunct(size_t curline, char * param, size_t len)
 	    ( [eE] ( [+\-] $exp_sign )? [0-9]+ $exp )?
 	) %number;
 
-#	main :=  (number '\n')* ;
-#	main :=  ((number)|(word [' ''.'';''"']?)*) '\n' %finish_ok;
-#	main :=  (alnum* [' ''.'';''"''-''']?)* '\n' %finish_ok;
-#1	main :=  (alnum+ [ -~])* '\n' %finish_ok;
-#	main :=  (digit+ ('.'digit+)? ( [ ]?[eE] [+\-] digit )? )* '\n' %finish_ok;
 
-#	main := ()* '\n' %finish_ok
-	
 
 	
 	action return { printf("RETURN\n"); fret; }
@@ -935,7 +928,7 @@ void gpunct(size_t curline, char * param, size_t len)
 	
 	param = ((alpha [+\-]? digit+ ('.' digit+)? ) | ( l_com  ) )>start_param $char_param ;
 	
-	gname := (( gindex) ' ' ( (param)%end_param |' '? )* (l_com)? '\n') @return;
+	gname := (( gindex) ' ' ( (param)|space+ )*@end_param  (l_com)? '\n') @return;
 
 	# The main parser.
 	block =(
