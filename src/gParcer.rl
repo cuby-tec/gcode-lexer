@@ -821,14 +821,10 @@ void gpunct(size_t curline, char * param, size_t len)
 		printf("\ncommand_index: %c\n",fc);
 	}
 	
-	action start_comment{
-		printf("\nstart_comment: %c\n",fc);
-	}
-	
 	action end_comment{
-		(*prs[eComment])(fsm->curline ,gBuffer,buffer_index);
-		fwrite( gBuffer, 1, buffer_index, stdout );
-		printf("\nend_comment: %c\n",fc);
+		(*prs[eComment])(fsm->curline ,fsm->buf,fsm->p - fsm->buf);
+		fwrite( fsm->buf, 1, fsm->p - fsm->buf, stdout );
+//		printf("\nend_comment: %c\n",fc);
 	}
 	
 	# A parser for date strings.
@@ -850,14 +846,14 @@ void gpunct(size_t curline, char * param, size_t len)
 	gname := (( gindex)%command_index (' ' ( (param).space? )*)?  '\n') @return;
 
 	#Comment content
-	comment_cnt = ( (print)+  )$dgt ;
-	comment = ( comment_cnt )>start_comment %end_comment ;
+#	comment_cnt = (  ) ;
+	comment = ( (print)+  ) %end_comment ;
 	
 	# The main parser.
 	block =(
 	( 'G'|'M' )  @call_gblock   
 	| ('F' gindex ) | ('T' gindex) | 'S' gindex 
-	| ';' comment  | ('(' (any)* :>> ')')$dgt )>start_tag;
+	| ';' comment  | ('(' (any)* :>> ')')%end_comment )>start_tag;
 	
 	main := (block (l_com)? '\n'? | ('' '\n')? ) %finish_ok;	
 	
@@ -911,7 +907,7 @@ void format_execute( struct format *fsm, char *data, int len, int isEof )
 	%% write exec;
 	
 		if ( format_finish( fsm ) <= 0 ){
-			int as = 1;
+//			int as = 1;
 			printf("[898] FAIL :finish code:%d  %-10s \n", format_finish( fsm ) ,data);
 			assert(format_finish( fsm ) >= 1) ;
 		}
