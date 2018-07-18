@@ -776,16 +776,16 @@ void gpunct(size_t curline, char * param, size_t len)
 	
 	action dec      {
 		append(fc);
-		printf("DEC: .\n"); 
+//		printf("DEC: .\n"); 
 	}
-	action exp      { printf("EXP: %c\n", fc); }
-	action exp_sign { printf("SGN: %c\n", fc); }
-	action number   { printf("NUMBER\n");  /*NUMBER*/ }
+#	action exp      { printf("EXP: %c\n", fc); }
+#	action exp_sign { printf("SGN: %c\n", fc); }
+#	action number   { printf("NUMBER\n");  /*NUMBER*/ }
 
-	number = (
-	    [0-9]+ $dgt ( '.' @dec [0-9]+ $dgt )?
-	    ( [eE] ( [+\-] $exp_sign )? [0-9]+ $exp )?
-	) %number;
+#	number = (
+#	    [0-9]+ $dgt ( '.' @dec [0-9]+ $dgt )?
+#	    ( [eE] ( [+\-] $exp_sign )? [0-9]+ $exp )?
+#	) %number;
 
 
 
@@ -793,7 +793,7 @@ void gpunct(size_t curline, char * param, size_t len)
 	action return { printf("RETURN\n"); fret; }
 	
 	action call_gblock {
-		append(fc);
+//		append(fc);
 		printf("NAME: %c\n",fc);
 		fcall gname; 
 	}
@@ -811,6 +811,7 @@ void gpunct(size_t curline, char * param, size_t len)
 	
 	action start_tag {
 		resetBuffer();
+		append(fc);
 		printf("start_tag: %c\n",fc); 
 	}
 	
@@ -818,6 +819,16 @@ void gpunct(size_t curline, char * param, size_t len)
 		(*prs[eGcommand])(fsm->curline ,gBuffer,buffer_index-gts);
 		fwrite( gBuffer, 1, buffer_index, stdout );
 		printf("\ncommand_index: %c\n",fc);
+	}
+	
+	action start_comment{
+		printf("\nstart_comment: %c\n",fc);
+	}
+	
+	action end_comment{
+		(*prs[eComment])(fsm->curline ,gBuffer,buffer_index);
+		fwrite( gBuffer, 1, buffer_index, stdout );
+		printf("\nend_comment: %c\n",fc);
 	}
 	
 	# A parser for date strings.
@@ -836,13 +847,17 @@ void gpunct(size_t curline, char * param, size_t len)
 	param = ((param_data) | ( l_com  ) )>start_param $dgt ;
 	
 	# A parser for name strings.
-	gname := (( gindex)%command_index (' ' ( (param).space? )*)?  (l_com)? '\n') @return;
+	gname := (( gindex)%command_index (' ' ( (param).space? )*)?  '\n') @return;
 
+	#Comment content
+	comment_cnt = ( (print)+  )$dgt ;
+	comment = ( comment_cnt )>start_comment %end_comment ;
+	
 	# The main parser.
 	block =(
 	( 'G'|'M' )  @call_gblock   
 	| ('F' gindex ) | ('T' gindex) | 'S' gindex 
-	| (';' (any)* :>> '\n')| ('(' (any)* :>> ')')$dgt )>start_tag;
+	| ';' comment  | ('(' (any)* :>> ')')$dgt )>start_tag;
 	
 	main := (block (l_com)? '\n'? | ('' '\n')? ) %finish_ok;	
 	
