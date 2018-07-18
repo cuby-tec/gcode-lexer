@@ -24,10 +24,8 @@ typedef void (*gfunction)(size_t, char *, size_t );  // Declare typedef
 
 
 enum prsCmd{
-	eCommand, eComment, eGcommand, eXparam, eYparam, eZparam, eAparam
-	, eBparam, eCparam, eDparam, eEparam, eFparam, eIparam, eJparam
-	, eKparam, eLparam, eMparam, eNparam, ePparam, eRparam, eSparam
-	, eTpaam, eUparam, eVparam, eWparam, eStarparam,ePunct
+	eCommand, eComment, eGcommand, eXparam, eOcommand
+ 	,eStarparam,ePunct
 	
 };
 
@@ -58,6 +56,8 @@ struct format
 	int eofile;
 	int lenfile;
 	uint state;
+	int top;
+	int stack[100];
 };
 
 //#define curline	fsm->curline
@@ -86,38 +86,14 @@ static gfunction parser_out;
  void gcomment (size_t curline, char * param, size_t len);
  void g_command (size_t curline, char * param, size_t len);
  void x_coordinate(size_t curline, char * param, size_t len);
- void y_coordinate(size_t curline, char * param, size_t len);
- void z_coordinate(size_t curline, char * param, size_t len);
- void a_parameter(size_t curline, char * param, size_t len);
- void b_parameter(size_t curline, char * param, size_t len);
- void c_parameter(size_t curline, char * param, size_t len);
- void d_parameter(size_t curline, char * param, size_t len);
- void e_parameter(size_t curline, char * param, size_t len);
- void f_parameter(size_t curline, char * param, size_t len);
- void i_parameter(size_t curline, char * param, size_t len);
- void j_parameter(size_t curline, char * param, size_t len);
- void k_parameter(size_t curline, char * param, size_t len);
- void l_parameter(size_t curline, char * param, size_t len);
- void m_parameter(size_t curline, char * param, size_t len);
- void n_parameter(size_t curline, char * param, size_t len);
- void p_parameter(size_t curline, char * param, size_t len);
- void r_parameter(size_t curline, char * param, size_t len);
- void s_parameter(size_t curline, char * param, size_t len);
- void t_parameter(size_t curline, char * param, size_t len);
- void u_parameter(size_t curline, char * param, size_t len);
- void v_parameter(size_t curline, char * param, size_t len);
- void w_parameter(size_t curline, char * param, size_t len);
+ void o_command (size_t curline, char * param, size_t len);
+
  void star_parameter(size_t curline, char * param, size_t len);
  //fprintf(flog, "symbol(%i): %c\n", fsm->curline, fsm->ts[0] );
  void gpunct(size_t curline, char * param, size_t len);
 
-gfunction prs[] = {&command,&gcomment,&g_command,&x_coordinate
-	, &y_coordinate	,&z_coordinate,&a_parameter, &b_parameter
-	, &c_parameter, &d_parameter, &e_parameter, &f_parameter
-	, &i_parameter, &j_parameter, &k_parameter, &l_parameter
-	, &m_parameter, &n_parameter, &p_parameter, &r_parameter
-	, &s_parameter, &t_parameter, &u_parameter, &v_parameter
-	, &w_parameter, &star_parameter, &gpunct };
+gfunction prs[] = {&command,&gcomment,&g_command,&x_coordinate, &o_command
+		,&star_parameter, &gpunct };
 
 
 // g Command
@@ -132,16 +108,26 @@ gfunction prs[] = {&command,&gcomment,&g_command,&x_coordinate
 #endif
 }
 
- char gBuffer[100];
+#define gBUFFER_SIZE	100 
+ 
+ char gBuffer[gBUFFER_SIZE];
  
  size_t buffer_index = 0;
+ size_t param_index;
+ size_t gts;
 
- void append(char ch)
- {
- 	gBuffer[buffer_index++] = ch;
- }
+void append(char ch)
+{
+	gBuffer[buffer_index++] = ch;
+}
 
-
+void resetBuffer()
+{
+	gts = 0;
+	buffer_index = 0;
+	param_index = 0;
+	memset(gBuffer,0,gBUFFER_SIZE);
+}
 
 
 // g comment
@@ -159,7 +145,7 @@ gfunction prs[] = {&command,&gcomment,&g_command,&x_coordinate
 // g GXX.X digit 		=command=	command GXX.X
  void g_command (size_t curline, char * param, size_t len){
 #ifdef FLOG	 
-		fprintf(flog, "G command(%lu): ", curline );
+		fprintf(flog, "command line(%lu): ", curline );
 		fwrite( param, 1, len, flog );
 		fprintf(flog,"\n");
 #endif
@@ -172,7 +158,7 @@ gfunction prs[] = {&command,&gcomment,&g_command,&x_coordinate
  void x_coordinate(size_t curline, char * param, size_t len)
 {
 #ifdef FLOG
-	 fprintf(flog, "\tX parameter(%lu): ", curline );
+	 fprintf(flog, "\t parameter line(%lu): ", curline );
 		fwrite( param, 1, len, flog );
 		fprintf(flog,"\n");
 #endif
@@ -181,280 +167,19 @@ gfunction prs[] = {&command,&gcomment,&g_command,&x_coordinate
 #endif
 }
 
-// g Y 	coordinat
- void y_coordinate(size_t curline, char * param, size_t len)
-{
+ // O command
+void o_command (size_t curline, char * param, size_t len){
 #ifdef FLOG
-		fprintf(flog, "\tY parameter(%lu): ", curline );
+	 fprintf(flog, "command line(%lu): ", curline );
 		fwrite( param, 1, len, flog );
 		fprintf(flog,"\n");
 #endif
-#ifdef SCANNER
-		b_y_coordinate (curline, param, len);
+#ifdef SCANNER		
+		b_o_command (curline, param, len);
 #endif
+
 }
-
-// g Z 	coordiane Line78
- void z_coordinate(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tZ parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_z_coordinate (curline, param, len);
-#endif
-}
-
-// g A	 decimal   Stepper A position or angle {Annn] 
-
- void a_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-	 fprintf(flog, "\tA parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_a_parameter (curline, param, len);
-#endif
-}
-
-// g B	 decimal Stepper B position or angle {Bnnn}
- void b_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tB parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_b_parameter (curline, param, len);
-#endif
-}
-
-// g C	 decimal Stepper C position or angle {Cnnn}
- void c_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tC parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_c_parameter (curline, param, len);
-#endif		
-}
-
-// g D	 none Adjust Diagonal Rod {D}
- void d_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tD parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_d_parameter (curline, param, len);
-#endif		
-}
-
-// g E	 optional coordinate
- void e_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tE parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_e_parameter (curline, param, len);
-#endif		
-}
-
-// g F 	decimal Feed rate parameter in G-command
- void f_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tF parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_f_parameter (curline, param, len);
-#endif		
-}
-
-// g I 	optional X offset for arcs and G87 canned cycles
- void i_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tI parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_i_parameter (curline, param, len);
-#endif		
-}
-
-// g J	 decimal Y offset for arcs and G87 canned cycles
- void j_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tJ parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_j_parameter (curline, param, len);
-#endif
-}
-
-// g K 	decimal Z offset for arcs and G87 canned cycles.
- void k_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tK parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_k_parameter (curline, param, len);
-#endif
-}
-
-// g L 			decimal	 generic parameter word for G10, M66 and others
- void l_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tL parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_l_parameter (curline, param, len);
-#endif		
-}
-
-// g M 	digit 	= command= Code Modal Groups
- void m_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "M command(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_m_parameter (curline, param, len);
-#endif	
-}
-
-// g N digit				Line number
- void n_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tN parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_n_parameter (curline, param, len);
-#endif		
-}
-
-// g P	alnum_u		Command parameter, such as time in milliseconds; proportional (Kp) in PID Tuning 
- void p_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tP parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_p_parameter (curline, param, len);
-#endif		
-}
-
-// g R 	optional	Arc radius or canned cycle plane
- void r_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tR parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_r_parameter (curline, param, len);
-#endif		
-}
-
-// g S	optional	Spindle speed; Command parameter, such as time in seconds; temperatures; voltage to send to a motor 
- void s_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tS parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_s_parameter (curline, param, len);
-#endif		
-}
-
-// g T	digit	=command= 	Tool selection
- void t_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tT parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_t_parameter (curline, param, len);
-#endif		
-}
-
-// g U	optional  	U axis of machine;
- void u_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tU parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_u_parameter (curline, param, len);
-#endif		
-}
-
-// g V	optional  	V axis of machine;
- void v_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tV parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_v_parameter (curline, param, len);
-#endif		
-}
-
-// g W	optional  	W axis of machine;
- void w_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tW parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_w_parameter (curline, param, len);
-#endif		
-}
-
+ 
 // g *	digit		Checksum 
  void star_parameter(size_t curline, char * param, size_t len)
 {
@@ -484,64 +209,155 @@ void gpunct(size_t curline, char * param, size_t len)
 // 		punct			Symbols.
 
 
-#line 795 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 438 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 
 
 
-#line 492 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
+#line 217 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
 static const char _gparcer_actions[] = {
-	0, 1, 1, 2, 1, 2, 2, 1, 
-	3, 3, 1, 2, 0, 3, 1, 3, 
-	0
+	0, 1, 0, 1, 1, 1, 2, 1, 
+	3, 1, 6, 1, 7, 1, 8, 1, 
+	9, 1, 10, 2, 5, 1, 2, 6, 
+	1, 2, 6, 3, 2, 7, 0, 2, 
+	7, 4, 2, 8, 3, 2, 9, 0, 
+	2, 9, 6, 2, 10, 0, 3, 6, 
+	5, 1
 };
 
-static const char _gparcer_key_offsets[] = {
-	0, 0, 2, 3, 4, 6, 7, 8, 
-	9
+static const unsigned char _gparcer_key_offsets[] = {
+	0, 0, 1, 4, 5, 10, 14, 16, 
+	18, 21, 25, 27, 31, 33, 36, 38, 
+	43, 52, 53, 64, 80, 82, 96, 98, 
+	111, 114, 116, 120, 133, 138, 138, 139, 
+	142, 150, 159, 161, 162, 165, 171, 176, 
+	179, 182, 182, 182
 };
 
 static const char _gparcer_trans_keys[] = {
-	59, 71, 10, 10, 48, 57, 10, 10, 
-	10, 10, 0
+	41, 127, 0, 31, 41, 127, 0, 31, 
+	32, 126, 41, 127, 0, 31, 48, 57, 
+	48, 57, 127, 0, 31, 43, 45, 48, 
+	57, 48, 57, 10, 46, 48, 57, 48, 
+	57, 10, 48, 57, 48, 57, 10, 32, 
+	46, 48, 57, 10, 32, 40, 42, 59, 
+	65, 90, 97, 122, 41, 10, 32, 40, 
+	42, 59, 9, 13, 65, 90, 97, 122, 
+	10, 32, 40, 42, 43, 45, 46, 59, 
+	9, 13, 48, 57, 65, 90, 97, 122, 
+	48, 57, 10, 32, 40, 42, 46, 59, 
+	9, 13, 48, 57, 65, 90, 97, 122, 
+	48, 57, 10, 32, 40, 42, 59, 9, 
+	13, 48, 57, 65, 90, 97, 122, 127, 
+	0, 31, 48, 57, 10, 32, 48, 57, 
+	10, 40, 59, 70, 71, 77, 79, 0, 
+	82, 83, 84, 85, 127, 10, 40, 59, 
+	0, 127, 10, 10, 40, 59, 10, 40, 
+	59, 127, 0, 31, 32, 126, 10, 40, 
+	41, 59, 127, 0, 31, 32, 126, 10, 
+	41, 41, 127, 0, 31, 10, 40, 46, 
+	59, 48, 57, 10, 40, 59, 48, 57, 
+	10, 40, 59, 10, 40, 59, 10, 32, 
+	40, 42, 59, 9, 13, 65, 90, 97, 
+	122, 0
 };
 
 static const char _gparcer_single_lengths[] = {
-	0, 2, 1, 1, 0, 1, 1, 1, 
-	1
+	0, 1, 1, 1, 1, 2, 0, 0, 
+	1, 2, 0, 2, 0, 1, 0, 3, 
+	5, 1, 5, 8, 0, 6, 0, 5, 
+	1, 0, 2, 7, 3, 0, 1, 3, 
+	4, 5, 2, 1, 1, 4, 3, 3, 
+	3, 0, 0, 5
 };
 
 static const char _gparcer_range_lengths[] = {
-	0, 0, 0, 0, 1, 0, 0, 0, 
-	0
+	0, 0, 1, 0, 2, 1, 1, 1, 
+	1, 1, 1, 1, 1, 1, 1, 1, 
+	2, 0, 3, 4, 1, 4, 1, 4, 
+	1, 1, 1, 3, 1, 0, 0, 0, 
+	2, 2, 0, 0, 1, 1, 1, 0, 
+	0, 0, 0, 3
 };
 
-static const char _gparcer_index_offsets[] = {
-	0, 0, 3, 5, 7, 9, 11, 13, 
-	15
+static const unsigned char _gparcer_index_offsets[] = {
+	0, 0, 2, 5, 7, 11, 15, 17, 
+	19, 22, 26, 28, 32, 34, 37, 39, 
+	44, 52, 54, 63, 76, 78, 89, 91, 
+	101, 104, 106, 110, 121, 126, 127, 129, 
+	133, 140, 148, 151, 153, 156, 162, 167, 
+	171, 175, 176, 177
 };
 
 static const char _gparcer_indicies[] = {
-	0, 2, 1, 3, 0, 4, 0, 5, 
-	1, 6, 5, 7, 5, 4, 0, 7, 
-	5, 0
+	1, 0, 1, 1, 2, 4, 3, 1, 
+	1, 5, 2, 8, 7, 7, 6, 9, 
+	10, 11, 10, 13, 13, 12, 14, 14, 
+	15, 10, 15, 10, 16, 17, 15, 10, 
+	18, 10, 16, 18, 10, 19, 10, 20, 
+	21, 22, 19, 10, 23, 24, 25, 26, 
+	27, 26, 26, 10, 29, 28, 31, 30, 
+	25, 26, 27, 30, 26, 26, 10, 33, 
+	32, 34, 35, 36, 36, 37, 39, 32, 
+	38, 35, 35, 10, 38, 10, 33, 32, 
+	34, 35, 37, 39, 32, 38, 35, 35, 
+	10, 40, 10, 33, 32, 34, 35, 39, 
+	32, 40, 35, 35, 10, 29, 29, 41, 
+	42, 10, 20, 21, 42, 10, 44, 45, 
+	46, 47, 48, 48, 49, 10, 47, 10, 
+	43, 51, 0, 2, 10, 50, 10, 51, 
+	10, 52, 53, 54, 10, 55, 56, 57, 
+	1, 1, 5, 2, 58, 56, 60, 56, 
+	7, 7, 59, 6, 61, 1, 0, 1, 
+	0, 1, 1, 2, 51, 0, 62, 2, 
+	9, 10, 51, 0, 2, 11, 10, 51, 
+	0, 2, 10, 63, 64, 65, 10, 10, 
+	10, 31, 30, 25, 26, 27, 30, 26, 
+	26, 10, 0
 };
 
 static const char _gparcer_trans_targs[] = {
-	2, 0, 4, 3, 7, 5, 6, 8
+	1, 30, 2, 3, 31, 32, 5, 34, 
+	36, 37, 0, 38, 8, 40, 10, 11, 
+	41, 12, 13, 15, 42, 16, 25, 42, 
+	16, 17, 19, 24, 17, 18, 18, 43, 
+	18, 43, 17, 19, 20, 22, 21, 24, 
+	23, 24, 26, 28, 29, 3, 4, 6, 
+	39, 8, 28, 29, 29, 1, 2, 30, 
+	33, 32, 34, 33, 32, 35, 7, 29, 
+	1, 2
 };
 
 static const char _gparcer_trans_actions[] = {
-	1, 0, 1, 3, 9, 1, 6, 13
+	0, 9, 0, 0, 9, 0, 0, 9, 
+	9, 3, 0, 3, 0, 0, 0, 0, 
+	7, 0, 0, 3, 34, 13, 5, 7, 
+	0, 19, 19, 19, 3, 22, 0, 7, 
+	9, 25, 46, 46, 3, 3, 3, 46, 
+	3, 3, 3, 11, 11, 11, 11, 11, 
+	31, 11, 0, 0, 15, 15, 15, 40, 
+	15, 15, 40, 0, 9, 0, 5, 17, 
+	17, 17
 };
 
-static const int gparcer_start = 1;
-static const int gparcer_first_final = 7;
+static const char _gparcer_eof_actions[] = {
+	0, 0, 0, 0, 0, 0, 0, 0, 
+	0, 0, 0, 0, 0, 0, 0, 0, 
+	0, 0, 0, 0, 0, 0, 0, 0, 
+	0, 0, 0, 28, 1, 1, 1, 37, 
+	37, 37, 1, 1, 1, 1, 1, 1, 
+	43, 0, 0, 0
+};
+
+static const int gparcer_start = 27;
+static const int gparcer_first_final = 27;
 static const int gparcer_error = 0;
 
-static const int gparcer_en_main = 1;
+static const int gparcer_en_date = 9;
+static const int gparcer_en_gname = 14;
+static const int gparcer_en_main = 27;
 
 
-#line 798 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 441 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 
 
 struct format fsm;
@@ -568,27 +384,30 @@ void format_init( struct format *fsm )
 	fsm->curline = 1;
 	fsm->state = 0;
 	
-#line 572 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
+#line 388 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
 	{
 	( fsm->cs) = gparcer_start;
+	( fsm->top) = 0;
 	}
 
-#line 824 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 467 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 }
-
+static int strnum = 0;
 void format_execute( struct format *fsm, char *data, int len, int isEof )
 {
 //	const char *p = data;
 //	const char *pe = data + len;
 //	const char *eof = isEof ? pe : 0;
+	fsm->curline = ++strnum;
+	fsm->buf = data;
 	fsm->p = data;
 	fsm->pe = data+len;
 	fsm->eof = isEof ? fsm->pe : 0;
-	printf("format_execute[747]: len:%d  done:%d line:%d \n",len,fsm->done,fsm->curline);
+	printf("format_execute[892]: len:%d  done:%d line:%d \n",len,fsm->done,fsm->curline);
 	if(len == 0)
 		return;
 	
-#line 592 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
+#line 411 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
 	{
 	int _klen;
 	unsigned int _trans;
@@ -662,36 +481,80 @@ _match:
 	{
 		switch ( *_acts++ )
 		{
-	case 0:
-#line 740 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
-	{
-//		if ( fsm->buflen > 0 )
-//			fsm->write( fsm->buf, fsm->buflen );
-//		fwrite("End\n",1,4,stdout);
-		printf("\n action finish_ok.\n");
-	}
-	break;
 	case 1:
-#line 755 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 350 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{
 		append((*( fsm->p)));
+//		printf("DGT: %c\n", fc); 
 	}
 	break;
 	case 2:
-#line 762 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 355 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{
-		(*prs[eComment])(fsm->curline ,gBuffer,buffer_index);
-//		printf("onBuffer: %s", gBuffer);
-
+		append((*( fsm->p)));
+//		printf("DEC: .\n"); 
 	}
 	break;
 	case 3:
-#line 776 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 361 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+	{ printf("RETURN\n"); {( fsm->cs) = ( fsm->stack)[--( fsm->top)]; goto _again;} }
+	break;
+	case 4:
+#line 363 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{
-		(*prs[eGcommand])(fsm->curline ,gBuffer,buffer_index);
+//		append(fc);
+//		printf("NAME: %c\n",fc);
+		{( fsm->stack)[( fsm->top)++] = ( fsm->cs); ( fsm->cs) = 14; goto _again;} 
 	}
 	break;
-#line 695 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
+	case 5:
+#line 369 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+	{
+		gts = buffer_index;
+		printf("start param: %c\n",(*( fsm->p))); 
+	}
+	break;
+	case 6:
+#line 374 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+	{
+		(*prs[eXparam])(fsm->curline ,&gBuffer[gts],buffer_index - gts);
+		fwrite( &gBuffer[gts], 1, buffer_index - gts, stdout );
+		printf("\n\tend_param: %c\n",(*( fsm->p))); 
+	}
+	break;
+	case 7:
+#line 380 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+	{
+		resetBuffer();
+		append((*( fsm->p)));
+		printf("start_tag: %c\n",(*( fsm->p))); 
+	}
+	break;
+	case 8:
+#line 386 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+	{
+		(*prs[eGcommand])(fsm->curline ,gBuffer,buffer_index-gts);
+		fwrite( gBuffer, 1, buffer_index, stdout );
+		printf("\ncommand_index: %c\n",(*( fsm->p)));
+	}
+	break;
+	case 9:
+#line 392 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+	{
+		(*prs[eComment])(fsm->curline ,fsm->buf,fsm->p - fsm->buf);
+		fwrite( fsm->buf, 1, fsm->p - fsm->buf, stdout );
+		printf("\nend_comment: %c\n",(*( fsm->p)));
+	}
+	break;
+	case 10:
+#line 398 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+	{
+		(*prs[eOcommand])(fsm->curline ,fsm->buf,fsm->p - fsm->buf);
+		fwrite( fsm->buf, 1, fsm->p - fsm->buf, stdout );
+		printf("\nend_otag: %c\n",(*( fsm->p)));
+	}
+	break;
+#line 558 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
 		}
 	}
 
@@ -701,13 +564,60 @@ _again:
 	if ( ++( fsm->p) != ( fsm->pe) )
 		goto _resume;
 	_test_eof: {}
+	if ( ( fsm->p) == ( fsm->eof) )
+	{
+	const char *__acts = _gparcer_actions + _gparcer_eof_actions[( fsm->cs)];
+	unsigned int __nacts = (unsigned int) *__acts++;
+	while ( __nacts-- > 0 ) {
+		switch ( *__acts++ ) {
+	case 0:
+#line 343 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+	{
+//		if ( fsm->buflen > 0 )
+//			fsm->write( fsm->buf, fsm->buflen );
+//		fwrite("End\n",1,4,stdout);
+		printf("\n action finish_ok.\n");
+	}
+	break;
+	case 7:
+#line 380 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+	{
+		resetBuffer();
+		append((*( fsm->p)));
+		printf("start_tag: %c\n",(*( fsm->p))); 
+	}
+	break;
+	case 9:
+#line 392 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+	{
+		(*prs[eComment])(fsm->curline ,fsm->buf,fsm->p - fsm->buf);
+		fwrite( fsm->buf, 1, fsm->p - fsm->buf, stdout );
+		printf("\nend_comment: %c\n",(*( fsm->p)));
+	}
+	break;
+	case 10:
+#line 398 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+	{
+		(*prs[eOcommand])(fsm->curline ,fsm->buf,fsm->p - fsm->buf);
+		fwrite( fsm->buf, 1, fsm->p - fsm->buf, stdout );
+		printf("\nend_otag: %c\n",(*( fsm->p)));
+	}
+	break;
+#line 607 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
+		}
+	}
+	}
+
 	_out: {}
 	}
 
-#line 838 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 483 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	
-		if ( format_finish( fsm ) <= 0 )
-		printf("[602] FAIL :finish code:%d  %-10s \n", format_finish( fsm ) ,data);
+		if ( format_finish( fsm ) <= 0 ){
+//			int as = 1;
+			printf("[898] FAIL :finish code:%d  %-10s \n", format_finish( fsm ) ,data);
+			assert(format_finish( fsm ) >= 1) ;
+		}
 
 	
 }
@@ -718,7 +628,7 @@ void init(){
 
 void execute(char *data, int len){
 	fsm.done = 0;
-	format_execute(&fsm, data, len, false);
+	format_execute(&fsm, data, len, true);
 }
 
 int finish(){
