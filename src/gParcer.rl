@@ -22,10 +22,8 @@ typedef void (*gfunction)(size_t, char *, size_t );  // Declare typedef
 
 
 enum prsCmd{
-	eCommand, eComment, eGcommand, eXparam, eYparam, eZparam, eAparam
-	, eBparam, eCparam, eDparam, eEparam, eFparam, eIparam, eJparam
-	, eKparam, eLparam, eMparam, eNparam, ePparam, eRparam, eSparam
-	, eTpaam, eUparam, eVparam, eWparam, eStarparam,ePunct
+	eCommand, eComment, eGcommand, eXparam, eOcommand
+ 	,eStarparam,ePunct
 	
 };
 
@@ -86,38 +84,14 @@ static gfunction parser_out;
  void gcomment (size_t curline, char * param, size_t len);
  void g_command (size_t curline, char * param, size_t len);
  void x_coordinate(size_t curline, char * param, size_t len);
- void y_coordinate(size_t curline, char * param, size_t len);
- void z_coordinate(size_t curline, char * param, size_t len);
- void a_parameter(size_t curline, char * param, size_t len);
- void b_parameter(size_t curline, char * param, size_t len);
- void c_parameter(size_t curline, char * param, size_t len);
- void d_parameter(size_t curline, char * param, size_t len);
- void e_parameter(size_t curline, char * param, size_t len);
- void f_parameter(size_t curline, char * param, size_t len);
- void i_parameter(size_t curline, char * param, size_t len);
- void j_parameter(size_t curline, char * param, size_t len);
- void k_parameter(size_t curline, char * param, size_t len);
- void l_parameter(size_t curline, char * param, size_t len);
- void m_parameter(size_t curline, char * param, size_t len);
- void n_parameter(size_t curline, char * param, size_t len);
- void p_parameter(size_t curline, char * param, size_t len);
- void r_parameter(size_t curline, char * param, size_t len);
- void s_parameter(size_t curline, char * param, size_t len);
- void t_parameter(size_t curline, char * param, size_t len);
- void u_parameter(size_t curline, char * param, size_t len);
- void v_parameter(size_t curline, char * param, size_t len);
- void w_parameter(size_t curline, char * param, size_t len);
+ void o_command (size_t curline, char * param, size_t len);
+
  void star_parameter(size_t curline, char * param, size_t len);
  //fprintf(flog, "symbol(%i): %c\n", fsm->curline, fsm->ts[0] );
  void gpunct(size_t curline, char * param, size_t len);
 
-gfunction prs[] = {&command,&gcomment,&g_command,&x_coordinate
-	, &y_coordinate	,&z_coordinate,&a_parameter, &b_parameter
-	, &c_parameter, &d_parameter, &e_parameter, &f_parameter
-	, &i_parameter, &j_parameter, &k_parameter, &l_parameter
-	, &m_parameter, &n_parameter, &p_parameter, &r_parameter
-	, &s_parameter, &t_parameter, &u_parameter, &v_parameter
-	, &w_parameter, &star_parameter, &gpunct };
+gfunction prs[] = {&command,&gcomment,&g_command,&x_coordinate, &o_command
+		,&star_parameter, &gpunct };
 
 
 // g Command
@@ -191,280 +165,19 @@ void resetBuffer()
 #endif
 }
 
-// g Y 	coordinat
- void y_coordinate(size_t curline, char * param, size_t len)
-{
+ // O command
+void o_command (size_t curline, char * param, size_t len){
 #ifdef FLOG
-		fprintf(flog, "\tY parameter(%lu): ", curline );
+	 fprintf(flog, "command line(%lu): ", curline );
 		fwrite( param, 1, len, flog );
 		fprintf(flog,"\n");
 #endif
-#ifdef SCANNER
-		b_y_coordinate (curline, param, len);
+#ifdef SCANNER		
+		b_o_command (curline, param, len);
 #endif
+
 }
-
-// g Z 	coordiane Line78
- void z_coordinate(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tZ parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_z_coordinate (curline, param, len);
-#endif
-}
-
-// g A	 decimal   Stepper A position or angle {Annn] 
-
- void a_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-	 fprintf(flog, "\tA parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_a_parameter (curline, param, len);
-#endif
-}
-
-// g B	 decimal Stepper B position or angle {Bnnn}
- void b_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tB parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_b_parameter (curline, param, len);
-#endif
-}
-
-// g C	 decimal Stepper C position or angle {Cnnn}
- void c_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tC parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_c_parameter (curline, param, len);
-#endif		
-}
-
-// g D	 none Adjust Diagonal Rod {D}
- void d_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tD parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_d_parameter (curline, param, len);
-#endif		
-}
-
-// g E	 optional coordinate
- void e_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tE parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_e_parameter (curline, param, len);
-#endif		
-}
-
-// g F 	decimal Feed rate parameter in G-command
- void f_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tF parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_f_parameter (curline, param, len);
-#endif		
-}
-
-// g I 	optional X offset for arcs and G87 canned cycles
- void i_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tI parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_i_parameter (curline, param, len);
-#endif		
-}
-
-// g J	 decimal Y offset for arcs and G87 canned cycles
- void j_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tJ parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_j_parameter (curline, param, len);
-#endif
-}
-
-// g K 	decimal Z offset for arcs and G87 canned cycles.
- void k_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tK parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_k_parameter (curline, param, len);
-#endif
-}
-
-// g L 			decimal	 generic parameter word for G10, M66 and others
- void l_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tL parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_l_parameter (curline, param, len);
-#endif		
-}
-
-// g M 	digit 	= command= Code Modal Groups
- void m_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "M command(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_m_parameter (curline, param, len);
-#endif	
-}
-
-// g N digit				Line number
- void n_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tN parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_n_parameter (curline, param, len);
-#endif		
-}
-
-// g P	alnum_u		Command parameter, such as time in milliseconds; proportional (Kp) in PID Tuning 
- void p_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tP parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_p_parameter (curline, param, len);
-#endif		
-}
-
-// g R 	optional	Arc radius or canned cycle plane
- void r_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tR parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_r_parameter (curline, param, len);
-#endif		
-}
-
-// g S	optional	Spindle speed; Command parameter, such as time in seconds; temperatures; voltage to send to a motor 
- void s_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tS parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_s_parameter (curline, param, len);
-#endif		
-}
-
-// g T	digit	=command= 	Tool selection
- void t_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tT parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_t_parameter (curline, param, len);
-#endif		
-}
-
-// g U	optional  	U axis of machine;
- void u_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tU parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_u_parameter (curline, param, len);
-#endif		
-}
-
-// g V	optional  	V axis of machine;
- void v_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tV parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_v_parameter (curline, param, len);
-#endif		
-}
-
-// g W	optional  	W axis of machine;
- void w_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tW parameter(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_w_parameter (curline, param, len);
-#endif		
-}
-
+ 
 // g *	digit		Checksum 
  void star_parameter(size_t curline, char * param, size_t len)
 {
@@ -516,13 +229,6 @@ void gpunct(size_t curline, char * param, size_t len)
 		
 	any_count_line = any | newline;
 
-	# Consume a C comment.
-#	c_comment := any_count_line* :>> '*/' @{fgoto main;};
-#	g_comment :=  any* :>> '\n' @{ fprintf(flog, "gcomment(%lu): ", fsm->curline );
-#		//fprintf(flog,"te=%5s  te=%5s",te,ts);
-#		//printf("te=%lu ts=%lu ;",te,ts);
-#		//curline ++;
-#		fgoto main;};
 
 	# Alpha numberic characters or underscore.
 	alnum_u = alnum | '_';
@@ -536,195 +242,83 @@ void gpunct(size_t curline, char * param, size_t len)
 		
 	word = alnum*;
 
-#1	main := |*
-#	gparcer := |*
-
-	# g comment
-#	';' { fgoto g_comment; };
-#	';' any* :>> '\n' { printf("[42]te=%lu ts=%lu ;",fsm->te,fsm->ts); fsm->curline++;};
 	a1 = ';' (any-'\n')* ;
-#1	{ 
-#1		//parser_out = gcomment;
-#1		(*prs[eComment])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
-	a2 = '(' any* :>> ')' ; 
-#1	{
-#1		//parser_out = gcomment;
-#1		(*prs[eComment])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# g command GXX.X
 	a3 = 'G' digit{1,2} ('.' digit+)? ;
-#1	{
-#1		//parser_out = g_command;
-#1		(*prs[eGcommand])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# g X coordinate
 	a4 = 'X' optional ;
-#1	{
-#1		//parser_out = x_coordinate;
-#1		(*prs[eXparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# g Y coordinate
 	a5 = 'Y' optional ;
-#1	{
-#1		//parser_out = y_coordinate;
-#1		(*prs[eYparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# g Z coordiane
 	a6 = 'Z' optional ;
-#1	{
-#1		//parser_out = z_coordinate;
-#1		(*prs[eZparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# g A    Stepper A position or angle {Annn]
 	a7 = 'A' decimal ;
-#1	{
-#1		//parser_out = a_parameter;
-#1		(*prs[eAparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 	
 	# g B  Stepper B position or angle {Bnnn}
 	a8 = 'B' decimal ;
-#1	{
-#1		//parser_out = b_parameter;
-#1		(*prs[eBparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# g C  Stepper C position or angle {Cnnn}
 	a9 = 'C' decimal ;
-#1	{
-#1		//parser_out = c_parameter;
-#1		(*prs[eCparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# g D  Adjust Diagonal Rod {D}
 	a10 = 'D' ;
-#1	{
-#1		//parser_out = d_parameter;
-#1		(*prs[eDparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# g E coordinate
 	a11 = 'E' optional ;
-#1	{
-#1		//parser_out = e_parameter;
-#1		(*prs[eEparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 
 	# g F Feed rate parameter in G-command
 	a12 = 'F' decimal ;
-#1	{
-#1		//parser_out = f_parameter;
-#1		(*prs[eFparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
-
 	# g I X offset for arcs and G87 canned cycles
 	a13 = 'I' optional ;
-#1	{
-#1		//parser_out = i_parameter;
-#1		(*prs[eIparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# g J Y offset for arcs and G87 canned cycles
 	a14 = 'J' decimal ;
-#1	{
-#1		//parser_out = j_parameter;
-#1		(*prs[eJparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# g K Z offset for arcs and G87 canned cycles.
 	a15 = 'K' decimal ;
-#1	{
-#1		//parser_out = k_parameter;
-#1		(*prs[eKparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 	
 	
 	# g L generic parameter word for G10, M66 and others
 	a16 = 'L' decimal ;
-#1	{
-#1		//parser_out = l_parameter;
-#1		(*prs[eLparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 	
 	# g M Code Modal Groups
 	a17 = 'M'  digit+ ;
-#1	{
-#1		//parser_out = m_parameter;
-#1		(*prs[eMparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# g N Line number 
 	a18 = 'N'  digit+ ;
-#1	{
-#1		//parser_out = n_parameter;
-#1		(*prs[eNparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# g P  	Command parameter, such as time in milliseconds; proportional (Kp) in PID Tuning 
 	#		Dwell time in canned cycles and with G4. Key used with G10.
 	a19 = 'P' alnum_u*  ;
-#1	{
-#1		//parser_out = p_parameter;
-#1		(*prs[ePparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# g R Arc radius or canned cycle plane
 	#	R Relative move flag 
 	a20 = 'R' optional ;
-#1	{
-#1		//parser_out = r_parameter;
-#1		(*prs[eRparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# g S Spindle speed; Command parameter, such as time in seconds; temperatures; voltage to send to a motor 
 	a21 = 'S'  optional   ;
-#1	{
-#1		//parser_out = s_parameter;
-#1		(*prs[eSparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 		
 	# g T Tool selection
 	a22 = 'T'  digit? ;
-#1	{
-#1		//parser_out = t_parameter;
-#1		(*prs[eTpaam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# g U  	U axis of machine;
 	#		Un <bool> with a non-zero value will apply the result to current zprobe_zoffset 
 	a23 = 'U' optional ;
-#1	{
-#1		//parser_out = u_parameter;
-#1		(*prs[eUparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 		
 	# g V  	V axis of machine;
 	a24 = 'V' optional ;
-#1	{
-#1		//parser_out = v_parameter;
-#1		(*prs[eVparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
-		
+
 	# g W  	W axis of machine;
 	a25 = 'W' optional ;
-#1	{
-#1		//parser_out = w_parameter;
-#1		(*prs[eWparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# g * Checksum 
 	a26 = '*' digit{2} ;
-#1	{
-#1		//parser_out = star_parameter;
-#1		(*prs[eStarparam])(fsm->curline ,fsm->ts,fsm->te-fsm->ts);
-#1		};
 
 	# Whitespace is standard ws, newlines and control codes.
 	a29 = any_count_line - 0x21..0x7e;
@@ -732,10 +326,6 @@ void gpunct(size_t curline, char * param, size_t len)
 	# Symbols. Upon entering clear the buffer. On all transitions
 	# buffer a character. Upon leaving dump the symbol.
 	a27 = ( punct - [_'"()] ) ;
-#1	{
-#1		//fprintf(flog, "symbol(%i): %c\n", fsm->curline, fsm->ts[0] );
-#1		(*prs[ePunct])(fsm->curline,fsm->ts,1);
-#1	};
 
 
 	# Describe both c style comments and c++ style comments. The
@@ -746,7 +336,6 @@ void gpunct(size_t curline, char * param, size_t len)
 #	'\n'* newline $!finish_ok;
 
 
-#1	*|;
 	
 #	main :=  ( )* @/ fcall gparcer ;
 	
@@ -758,17 +347,6 @@ void gpunct(size_t curline, char * param, size_t len)
 		printf("\n action finish_ok.\n");
 	}
 	
-	
-	#Command ===========
-	
-	# Comment =================
-
-	# G command ============
-	
-	#G command <<<<<<<<<<<<<<<<<<<
-
-	
-	
 	action dgt      {
 		append(fc);
 //		printf("DGT: %c\n", fc); 
@@ -778,23 +356,13 @@ void gpunct(size_t curline, char * param, size_t len)
 		append(fc);
 //		printf("DEC: .\n"); 
 	}
-#	action exp      { printf("EXP: %c\n", fc); }
-#	action exp_sign { printf("SGN: %c\n", fc); }
-#	action number   { printf("NUMBER\n");  /*NUMBER*/ }
-
-#	number = (
-#	    [0-9]+ $dgt ( '.' @dec [0-9]+ $dgt )?
-#	    ( [eE] ( [+\-] $exp_sign )? [0-9]+ $exp )?
-#	) %number;
 
 
-
-	
 	action return { printf("RETURN\n"); fret; }
 	
 	action call_gblock {
 //		append(fc);
-		printf("NAME: %c\n",fc);
+//		printf("NAME: %c\n",fc);
 		fcall gname; 
 	}
 	
@@ -824,13 +392,18 @@ void gpunct(size_t curline, char * param, size_t len)
 	action end_comment{
 		(*prs[eComment])(fsm->curline ,fsm->buf,fsm->p - fsm->buf);
 		fwrite( fsm->buf, 1, fsm->p - fsm->buf, stdout );
-//		printf("\nend_comment: %c\n",fc);
+		printf("\nend_comment: %c\n",fc);
+	}
+	
+	action end_otag{
+		(*prs[eOcommand])(fsm->curline ,fsm->buf,fsm->p - fsm->buf);
+		fwrite( fsm->buf, 1, fsm->p - fsm->buf, stdout );
+		printf("\nend_otag: %c\n",fc);
 	}
 	
 	# A parser for date strings.
 	date := decimal  '\n' @return;
 
-	
 	
 	gindex = digit+ $dgt ( '.' @dec [0-9]+ $dgt )? ;
 	
@@ -838,20 +411,20 @@ void gpunct(size_t curline, char * param, size_t len)
 	#l_com = ( (';' (any)* :>> cntrl)) @end_param ;
 	l_com = (( '('(any)* :>> ')') | (';' (any)* :>> cntrl)) @end_param ;
 	
-	param_data = (alpha [+\-]? digit+ ('.' digit+)? )%end_param ; 
+	param_data = ((alpha) ([+\-]? digit+)? ('.' digit+)? )%end_param ; 
 	
 	param = ((param_data) | ( l_com  ) )>start_param $dgt ;
 	
 	# A parser for name strings.
-	gname := (( gindex)%command_index (' ' ( (param).space? )*)?  '\n') @return;
+	gname := (( gindex)%command_index (' '+ ( (param).(space)* )*)?  '\n') @return;
 
 	#Comment content
-#	comment_cnt = (  ) ;
 	comment = ( (print)+  ) %end_comment ;
 	
+	o_tag = ( (any)* :> cntrl ) %end_otag ;
+	
 	# The main parser.
-	block =(
-	( 'G'|'M' )  @call_gblock   
+	block =( ( 'G'|'M' )  @call_gblock |  'O' o_tag | (extend-ascii)*
 	| ('F' gindex ) | ('T' gindex) | 'S' gindex 
 	| ';' comment  | ('(' (any)* :>> ')')%end_comment )>start_tag;
 	
