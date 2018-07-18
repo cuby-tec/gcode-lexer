@@ -411,7 +411,9 @@ void gpunct(size_t curline, char * param, size_t len)
 	#l_com = ( (';' (any)* :>> cntrl)) @end_param ;
 	l_com = (( '('(any)* :>> ')') | (';' (any)* :>> cntrl)) @end_param ;
 	
-	param_data = ((alpha) ([+\-]? digit+)? ('.' digit+)? )%end_param ; 
+	malpha = [A-Za-z*];
+	
+	param_data = ((malpha) ([+\-]? digit+)? ('.' digit+)? )%end_param ; 
 	
 	param = ((param_data) | ( l_com  ) )>start_param $dgt ;
 	
