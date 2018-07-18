@@ -86,12 +86,11 @@ static gfunction parser_out;
  void x_coordinate(size_t curline, char * param, size_t len);
  void o_command (size_t curline, char * param, size_t len);
 
- void star_parameter(size_t curline, char * param, size_t len);
  //fprintf(flog, "symbol(%i): %c\n", fsm->curline, fsm->ts[0] );
  void gpunct(size_t curline, char * param, size_t len);
 
 gfunction prs[] = {&command,&gcomment,&g_command,&x_coordinate, &o_command
-		,&star_parameter, &gpunct };
+		, &gpunct };
 
 
 // g Command
@@ -179,17 +178,7 @@ void o_command (size_t curline, char * param, size_t len){
 }
  
 // g *	digit		Checksum 
- void star_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tchecksum_lit(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_star_parameter (curline, param, len);
-#endif		
-}
+
 
 void gpunct(size_t curline, char * param, size_t len)
 {

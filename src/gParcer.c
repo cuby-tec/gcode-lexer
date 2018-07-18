@@ -88,12 +88,11 @@ static gfunction parser_out;
  void x_coordinate(size_t curline, char * param, size_t len);
  void o_command (size_t curline, char * param, size_t len);
 
- void star_parameter(size_t curline, char * param, size_t len);
  //fprintf(flog, "symbol(%i): %c\n", fsm->curline, fsm->ts[0] );
  void gpunct(size_t curline, char * param, size_t len);
 
 gfunction prs[] = {&command,&gcomment,&g_command,&x_coordinate, &o_command
-		,&star_parameter, &gpunct };
+		, &gpunct };
 
 
 // g Command
@@ -181,17 +180,7 @@ void o_command (size_t curline, char * param, size_t len){
 }
  
 // g *	digit		Checksum 
- void star_parameter(size_t curline, char * param, size_t len)
-{
-#ifdef FLOG
-		fprintf(flog, "\tchecksum_lit(%lu): ", curline );
-		fwrite( param, 1, len, flog );
-		fprintf(flog,"\n");
-#endif
-#ifdef SCANNER
-		b_star_parameter (curline, param, len);
-#endif		
-}
+
 
 void gpunct(size_t curline, char * param, size_t len)
 {
@@ -209,11 +198,11 @@ void gpunct(size_t curline, char * param, size_t len)
 // 		punct			Symbols.
 
 
-#line 438 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 427 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 
 
 
-#line 217 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
+#line 206 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
 static const char _gparcer_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 1, 
 	3, 1, 6, 1, 7, 1, 8, 1, 
@@ -357,7 +346,7 @@ static const int gparcer_en_gname = 14;
 static const int gparcer_en_main = 27;
 
 
-#line 441 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 430 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 
 
 struct format fsm;
@@ -384,13 +373,13 @@ void format_init( struct format *fsm )
 	fsm->curline = 1;
 	fsm->state = 0;
 	
-#line 388 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
+#line 377 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
 	{
 	( fsm->cs) = gparcer_start;
 	( fsm->top) = 0;
 	}
 
-#line 467 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 456 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 }
 static int strnum = 0;
 void format_execute( struct format *fsm, char *data, int len, int isEof )
@@ -407,7 +396,7 @@ void format_execute( struct format *fsm, char *data, int len, int isEof )
 	if(len == 0)
 		return;
 	
-#line 411 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
+#line 400 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
 	{
 	int _klen;
 	unsigned int _trans;
@@ -482,25 +471,25 @@ _match:
 		switch ( *_acts++ )
 		{
 	case 1:
-#line 350 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 339 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{
 		append((*( fsm->p)));
 //		printf("DGT: %c\n", fc); 
 	}
 	break;
 	case 2:
-#line 355 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 344 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{
 		append((*( fsm->p)));
 //		printf("DEC: .\n"); 
 	}
 	break;
 	case 3:
-#line 361 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 350 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{ printf("RETURN\n"); {( fsm->cs) = ( fsm->stack)[--( fsm->top)]; goto _again;} }
 	break;
 	case 4:
-#line 363 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 352 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{
 //		append(fc);
 //		printf("NAME: %c\n",fc);
@@ -508,14 +497,14 @@ _match:
 	}
 	break;
 	case 5:
-#line 369 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 358 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{
 		gts = buffer_index;
 		printf("start param: %c\n",(*( fsm->p))); 
 	}
 	break;
 	case 6:
-#line 374 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 363 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{
 		(*prs[eXparam])(fsm->curline ,&gBuffer[gts],buffer_index - gts);
 		fwrite( &gBuffer[gts], 1, buffer_index - gts, stdout );
@@ -523,7 +512,7 @@ _match:
 	}
 	break;
 	case 7:
-#line 380 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 369 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{
 		resetBuffer();
 		append((*( fsm->p)));
@@ -531,7 +520,7 @@ _match:
 	}
 	break;
 	case 8:
-#line 386 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 375 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{
 		(*prs[eGcommand])(fsm->curline ,gBuffer,buffer_index-gts);
 		fwrite( gBuffer, 1, buffer_index, stdout );
@@ -539,7 +528,7 @@ _match:
 	}
 	break;
 	case 9:
-#line 392 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 381 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{
 		(*prs[eComment])(fsm->curline ,fsm->buf,fsm->p - fsm->buf);
 		fwrite( fsm->buf, 1, fsm->p - fsm->buf, stdout );
@@ -547,14 +536,14 @@ _match:
 	}
 	break;
 	case 10:
-#line 398 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 387 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{
 		(*prs[eOcommand])(fsm->curline ,fsm->buf,fsm->p - fsm->buf);
 		fwrite( fsm->buf, 1, fsm->p - fsm->buf, stdout );
 		printf("\nend_otag: %c\n",(*( fsm->p)));
 	}
 	break;
-#line 558 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
+#line 547 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
 		}
 	}
 
@@ -571,7 +560,7 @@ _again:
 	while ( __nacts-- > 0 ) {
 		switch ( *__acts++ ) {
 	case 0:
-#line 343 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 332 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{
 //		if ( fsm->buflen > 0 )
 //			fsm->write( fsm->buf, fsm->buflen );
@@ -580,7 +569,7 @@ _again:
 	}
 	break;
 	case 7:
-#line 380 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 369 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{
 		resetBuffer();
 		append((*( fsm->p)));
@@ -588,7 +577,7 @@ _again:
 	}
 	break;
 	case 9:
-#line 392 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 381 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{
 		(*prs[eComment])(fsm->curline ,fsm->buf,fsm->p - fsm->buf);
 		fwrite( fsm->buf, 1, fsm->p - fsm->buf, stdout );
@@ -596,14 +585,14 @@ _again:
 	}
 	break;
 	case 10:
-#line 398 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 387 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	{
 		(*prs[eOcommand])(fsm->curline ,fsm->buf,fsm->p - fsm->buf);
 		fwrite( fsm->buf, 1, fsm->p - fsm->buf, stdout );
 		printf("\nend_otag: %c\n",(*( fsm->p)));
 	}
 	break;
-#line 607 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
+#line 596 "/home/walery/workspace_cdt/Strlen/src/gParcer.c"
 		}
 	}
 	}
@@ -611,7 +600,7 @@ _again:
 	_out: {}
 	}
 
-#line 483 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
+#line 472 "/home/walery/workspace_cdt/Strlen/src/gParcer.rl"
 	
 		if ( format_finish( fsm ) <= 0 ){
 //			int as = 1;
