@@ -16,6 +16,7 @@
 #include <string.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <assert.h>
 #define FLOG
 
 
@@ -27,6 +28,7 @@ extern FILE *flog;
 extern void b_command (size_t curline, char * param, size_t len);
 extern void b_gcomment (size_t curline, char * param, size_t len);
 extern void b_g_command (size_t curline, char * param, size_t len);
+extern void b_o_command (curline, param, len); // O command
 extern void b_x_coordinate(size_t curline, char * param, size_t len);
 extern void b_y_coordinate(size_t curline, char * param, size_t len);
 extern void b_z_coordinate(size_t curline, char * param, size_t len);
